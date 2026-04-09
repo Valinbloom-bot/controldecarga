@@ -18,9 +18,11 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
-function calcCarga(c: Omit<Carga, "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla"> & Partial<Pick<Carga, "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla">>): Carga {
+function calcCarga(c: Omit<Carga, "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla"> & Partial<Pick<Carga, "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla">>, linkedGasCost: number = 0): Carga {
   const millasTotal = (c.millasVacias || 0) + (c.millasCargadas || 0);
-  const totalGastos = (c.costoGasolina || 0) + (c.gastosComida || 0) + (c.hospedaje || 0) + (c.otrosGastos || 0);
+  // If there are linked gas entries, use that cost; otherwise fall back to manual costoGasolina
+  const gasolinaCost = linkedGasCost > 0 ? linkedGasCost : (c.costoGasolina || 0);
+  const totalGastos = gasolinaCost + (c.gastosComida || 0) + (c.hospedaje || 0) + (c.otrosGastos || 0);
   const gananciaNeta = (c.pagoRecibido || 0) - totalGastos;
   const gananciaPorMilla = millasTotal > 0 ? gananciaNeta / millasTotal : 0;
   const ingresoPorMilla = millasTotal > 0 ? (c.pagoRecibido || 0) / millasTotal : 0;
