@@ -11,7 +11,7 @@ import ControlGasolina from "@/pages/ControlGasolina";
 import ControlPeajes from "@/pages/ControlPeajes";
 import DesgloseSermanal from "@/pages/DesgloseSermanal";
 import ResumenMensual from "@/pages/ResumenMensual";
-import Metas from "@/pages/Metas";
+import DesgloseMes from "@/pages/Metas";
 import Configuracion from "@/pages/Configuracion";
 import NotFound from "@/pages/NotFound";
 
