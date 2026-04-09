@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Pencil, Trash2, Link2 } from "lucide-react";
 import { format } from "date-fns";
 
 const emptyForm = {
@@ -19,6 +20,7 @@ const emptyForm = {
   snackComida: 0,
   metodoPago: "Efectivo",
   notas: "",
+  cargaId: "",
 };
 
 export default function ControlGasolina() {
@@ -30,7 +32,7 @@ export default function ControlGasolina() {
   const handleOpen = (g?: RegistroGasolina) => {
     if (g) {
       setEditing(g);
-      setForm({ fecha: g.fecha, gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas });
+      setForm({ fecha: g.fecha, gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
     } else {
       setEditing(null);
       setForm(emptyForm);
@@ -39,8 +41,9 @@ export default function ControlGasolina() {
   };
 
   const handleSave = () => {
-    if (editing) updateGasolina({ ...editing, ...form });
-    else addGasolina(form);
+    const payload = { ...form, cargaId: form.cargaId || undefined };
+    if (editing) updateGasolina({ ...editing, ...payload });
+    else addGasolina(payload);
     setOpen(false);
   };
 
@@ -51,6 +54,13 @@ export default function ControlGasolina() {
   const totalGastado = totalGas + (form.snackComida || 0);
 
   const sorted = [...data.gasolina].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  const getCargaLabel = (cargaId?: string) => {
+    if (!cargaId) return null;
+    const c = data.cargas.find(x => x.id === cargaId);
+    if (!c) return null;
+    return `${c.ubicacionRecogida} → ${c.ubicacionEntrega} (${c.fechaRecogida})`;
+  };
 
   return (
     <div className="pb-20">
@@ -79,6 +89,22 @@ export default function ControlGasolina() {
                     <option>Efectivo</option><option>Tarjeta débito</option><option>Tarjeta crédito</option><option>EFS</option><option>Otro</option>
                   </select>
                 </div>
+                <div>
+                  <Label>Vincular a carga (opcional)</Label>
+                  <Select value={form.cargaId} onValueChange={v => setField("cargaId", v === "none" ? "" : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sin vincular" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin vincular</SelectItem>
+                      {data.cargas.map(c => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.ubicacionRecogida} → {c.ubicacionEntrega} ({c.fechaRecogida})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Notas</Label><Input value={form.notas} onChange={e => setField("notas", e.target.value)} /></div>
                 <Button className="w-full" size="lg" onClick={handleSave}>{editing ? "Guardar" : "Registrar"}</Button>
               </div>
@@ -98,6 +124,12 @@ export default function ControlGasolina() {
                   <div className="font-semibold text-sm">{g.gasolinera || "Gasolinera"}</div>
                   <div className="text-xs text-muted-foreground">{g.fecha} · {g.ubicacion}</div>
                   <div className="text-xs mt-1">{g.galones} gal × {formatMoney(g.precioPorGalon)}</div>
+                  {g.cargaId && (
+                    <div className="text-xs mt-1 flex items-center gap-1 text-primary">
+                      <Link2 className="w-3 h-3" />
+                      <span>{getCargaLabel(g.cargaId)}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-sm">{formatMoney(g.totalGastado)}</div>
