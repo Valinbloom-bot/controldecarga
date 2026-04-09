@@ -3,76 +3,107 @@ import { useAppData } from "@/context/AppContext";
 import { computeMonthlySummary, formatMoney, formatNumber } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { format } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format, addMonths } from "date-fns";
 import { es } from "date-fns/locale";
-import { Trophy, AlertTriangle } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-export default function Metas() {
-  const { data, setMeta } = useAppData();
-  const currentMonth = format(new Date(), "yyyy-MM");
-  const monthLabel = format(new Date(), "MMMM yyyy", { locale: es });
-  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, currentMonth);
-  const existing = data.metas.find(m => m.mes === currentMonth);
+export default function DesgloseMes() {
+  const { data } = useAppData();
+  const [monthOffset, setMonthOffset] = useState(0);
+  const monthDate = addMonths(new Date(), monthOffset);
+  const yearMonth = format(monthDate, "yyyy-MM");
+  const monthLabel = format(monthDate, "MMMM yyyy", { locale: es });
+  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth);
 
-  const [form, setForm] = useState({
-    metaCargas: existing?.metaCargas || 0,
-    metaIngreso: existing?.metaIngreso || 0,
-    metaMillas: existing?.metaMillas || 0,
-    metaGananciaNeta: existing?.metaGananciaNeta || 0,
-  });
-
-  const handleSave = () => {
-    setMeta({ ...form, mes: currentMonth });
-  };
-
-  const goals = useMemo(() => [
-    { label: "Cargas", current: summary.totalCargas, target: form.metaCargas, format: (n: number) => n.toString() },
-    { label: "Ingresos", current: summary.ingresosTotal, target: form.metaIngreso, format: formatMoney },
-    { label: "Millas", current: summary.millasTotal, target: form.metaMillas, format: (n: number) => formatNumber(n, 0) },
-    { label: "Ganancia Neta", current: summary.gananciaNeta, target: form.metaGananciaNeta, format: formatMoney },
-  ], [summary, form]);
+  const chartData = useMemo(() => [
+    { name: "Ingresos", value: summary.ingresosTotal },
+    { name: "Gastos", value: summary.gastosTotal },
+    { name: "Ganancia", value: Math.max(summary.gananciaNeta, 0) },
+  ], [summary]);
 
   return (
     <div className="pb-20">
-      <PageHeader title="Metas del Mes" />
-      <p className="px-4 text-sm text-muted-foreground mb-4 capitalize">{monthLabel}</p>
+      <PageHeader title="Desglose del Mes" />
 
-      <div className="px-4 space-y-3 mb-6">
-        {goals.map(g => {
-          const pct = g.target > 0 ? Math.min((g.current / g.target) * 100, 100) : 0;
-          const behind = g.target > 0 && pct < 50;
-          const complete = pct >= 100;
-          return (
-            <div key={g.label} className="bg-card border border-border rounded-lg p-3">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-medium">{g.label}</span>
-                <div className="flex items-center gap-1">
-                  {complete && <Trophy className="w-4 h-4 text-accent" />}
-                  {behind && <AlertTriangle className="w-4 h-4 text-accent" />}
-                  <span className="text-xs text-muted-foreground">{g.format(g.current)} / {g.format(g.target)}</span>
-                </div>
-              </div>
-              <Progress value={pct} className="h-2" />
-              {complete && <p className="text-xs text-success mt-1 font-medium">¡Meta alcanzada! 🎉</p>}
-              {behind && <p className="text-xs text-accent mt-1">Vas por debajo del objetivo</p>}
-            </div>
-          );
-        })}
+      <div className="flex items-center justify-between px-4 mb-4">
+        <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o - 1)}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        <span className="text-sm font-medium capitalize">{monthLabel}</span>
+        <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o + 1)} disabled={monthOffset >= 0}>
+          <ChevronRight className="w-4 h-4" />
+        </Button>
       </div>
 
-      <div className="px-4">
-        <div className="bg-card border border-border rounded-lg p-3 space-y-3">
-          <h3 className="text-sm font-semibold">Configurar Metas</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>Meta cargas</Label><Input type="number" value={form.metaCargas || ""} onChange={e => setForm(f => ({ ...f, metaCargas: parseInt(e.target.value) || 0 }))} /></div>
-            <div><Label>Meta ingreso ($)</Label><Input type="number" value={form.metaIngreso || ""} onChange={e => setForm(f => ({ ...f, metaIngreso: parseFloat(e.target.value) || 0 }))} /></div>
-            <div><Label>Meta millas</Label><Input type="number" value={form.metaMillas || ""} onChange={e => setForm(f => ({ ...f, metaMillas: parseInt(e.target.value) || 0 }))} /></div>
-            <div><Label>Meta ganancia ($)</Label><Input type="number" value={form.metaGananciaNeta || ""} onChange={e => setForm(f => ({ ...f, metaGananciaNeta: parseFloat(e.target.value) || 0 }))} /></div>
+      {/* Chart */}
+      <div className="px-4 mb-4">
+        <div className="bg-card border border-border rounded-lg p-3">
+          <h3 className="text-sm font-semibold mb-2">Resumen Visual</h3>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 10 }} width={50} />
+              <Tooltip formatter={(v: number) => formatMoney(v)} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                <Cell fill="hsl(var(--primary))" />
+                <Cell fill="hsl(var(--destructive))" />
+                <Cell fill="hsl(var(--success, 142 71% 45%))" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="px-4 space-y-4">
+        {/* Actividad */}
+        <div className="bg-card border border-border rounded-lg p-3">
+          <h3 className="text-sm font-semibold mb-2">Actividad</h3>
+          {[
+            ["Total de cargas", summary.totalCargas],
+            ["Millas recorridas", formatNumber(summary.millasTotal, 0)],
+            ["Días trabajados", summary.diasTrabajados],
+            ["Ingresos totales", formatMoney(summary.ingresosTotal)],
+            ["Promedio/carga", formatMoney(summary.ingresoPromedioPorCarga)],
+          ].map(([l, v]) => (
+            <div key={l as string} className="flex justify-between py-1 text-sm">
+              <span className="text-muted-foreground">{l}</span>
+              <span className="font-medium">{v}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Gastos */}
+        <div className="bg-card border border-border rounded-lg p-3">
+          <h3 className="text-sm font-semibold mb-2">Gastos</h3>
+          {[
+            ["Gasolina", summary.gastoGasolina],
+            ["Comida", summary.gastoComida],
+            ["Hospedaje", summary.gastoHospedaje],
+            ["Peajes", summary.gastoPeajes],
+            ["Otros", summary.otrosGastos],
+            ["Gastos totales", summary.gastosTotal],
+          ].map(([l, v], i, arr) => (
+            <div key={l as string} className={`flex justify-between py-1 text-sm ${i === arr.length - 1 ? "border-t border-border pt-2 mt-1" : ""}`}>
+              <span className="text-muted-foreground">{l}</span>
+              <span className={`font-medium ${i === arr.length - 1 ? "font-bold text-destructive" : ""}`}>{formatMoney(v as number)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Resultados */}
+        <div className="bg-card border border-border rounded-lg p-3">
+          <h3 className="text-sm font-semibold mb-2">Resultados</h3>
+          <div className="flex justify-between py-1 text-sm">
+            <span className="text-muted-foreground">Ganancia neta</span>
+            <span className={`font-bold text-lg ${summary.gananciaNeta >= 0 ? "text-success" : "text-destructive"}`}>
+              {formatMoney(summary.gananciaNeta)}
+            </span>
           </div>
-          <Button className="w-full" onClick={handleSave}>Guardar Metas</Button>
+          <div className="flex justify-between py-1 text-sm">
+            <span className="text-muted-foreground">Ganancia por milla</span>
+            <span className="font-medium">{formatMoney(summary.gananciaPorMilla)}</span>
+          </div>
         </div>
       </div>
     </div>
