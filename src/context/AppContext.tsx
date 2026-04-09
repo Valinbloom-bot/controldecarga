@@ -58,29 +58,77 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const uid = () => crypto.randomUUID();
 
-  const addCarga = useCallback((c: any) => {
-    setData(d => ({ ...d, cargas: [...d.cargas, calcCarga({ ...c, id: uid(), createdAt: new Date().toISOString() })] }));
+  // Helper: compute linked gas cost for a given carga id
+  const getLinkedGasCost = useCallback((cargaId: string, gasolinaList: RegistroGasolina[]) => {
+    return gasolinaList
+      .filter(g => g.cargaId === cargaId)
+      .reduce((sum, g) => sum + g.totalGasolina, 0);
   }, []);
+
+  // Recalculate all cargas that have linked gas entries
+  const recalcLinkedCargas = useCallback((cargas: Carga[], gasolinaList: RegistroGasolina[]): Carga[] => {
+    const linkedCargaIds = new Set(gasolinaList.filter(g => g.cargaId).map(g => g.cargaId!));
+    return cargas.map(c => {
+      if (linkedCargaIds.has(c.id)) {
+        return calcCarga(c, getLinkedGasCost(c.id, gasolinaList));
+      }
+      return c;
+    });
+  }, [getLinkedGasCost]);
+
+  const addCarga = useCallback((c: any) => {
+    setData(d => {
+      const newCarga = calcCarga({ ...c, id: uid(), createdAt: new Date().toISOString() }, getLinkedGasCost(c.id, d.gasolina));
+      return { ...d, cargas: [...d.cargas, newCarga] };
+    });
+  }, [getLinkedGasCost]);
 
   const updateCarga = useCallback((c: Carga) => {
-    setData(d => ({ ...d, cargas: d.cargas.map(x => x.id === c.id ? calcCarga(c) : x) }));
-  }, []);
+    setData(d => ({
+      ...d,
+      cargas: d.cargas.map(x => x.id === c.id ? calcCarga(c, getLinkedGasCost(c.id, d.gasolina)) : x),
+    }));
+  }, [getLinkedGasCost]);
 
   const deleteCarga = useCallback((id: string) => {
-    setData(d => ({ ...d, cargas: d.cargas.filter(x => x.id !== id) }));
+    setData(d => ({
+      ...d,
+      cargas: d.cargas.filter(x => x.id !== id),
+      // Unlink any gas entries tied to this load
+      gasolina: d.gasolina.map(g => g.cargaId === id ? { ...g, cargaId: undefined } : g),
+    }));
   }, []);
 
   const addGasolina = useCallback((g: any) => {
-    setData(d => ({ ...d, gasolina: [...d.gasolina, calcGasolina({ ...g, id: uid(), createdAt: new Date().toISOString() })] }));
-  }, []);
+    setData(d => {
+      const newGas = calcGasolina({ ...g, id: uid(), createdAt: new Date().toISOString() });
+      const newGasolina = [...d.gasolina, newGas];
+      const cargas = newGas.cargaId ? recalcLinkedCargas(d.cargas, newGasolina) : d.cargas;
+      return { ...d, gasolina: newGasolina, cargas };
+    });
+  }, [recalcLinkedCargas]);
 
   const updateGasolina = useCallback((g: RegistroGasolina) => {
-    setData(d => ({ ...d, gasolina: d.gasolina.map(x => x.id === g.id ? calcGasolina(g) : x) }));
-  }, []);
+    setData(d => {
+      const oldGas = d.gasolina.find(x => x.id === g.id);
+      const newGasolina = d.gasolina.map(x => x.id === g.id ? calcGasolina(g) : x);
+      // Recalc affected cargas (old link + new link)
+      const affectedIds = new Set<string>();
+      if (oldGas?.cargaId) affectedIds.add(oldGas.cargaId);
+      if (g.cargaId) affectedIds.add(g.cargaId);
+      const cargas = affectedIds.size > 0 ? recalcLinkedCargas(d.cargas, newGasolina) : d.cargas;
+      return { ...d, gasolina: newGasolina, cargas };
+    });
+  }, [recalcLinkedCargas]);
 
   const deleteGasolina = useCallback((id: string) => {
-    setData(d => ({ ...d, gasolina: d.gasolina.filter(x => x.id !== id) }));
-  }, []);
+    setData(d => {
+      const deleted = d.gasolina.find(x => x.id === id);
+      const newGasolina = d.gasolina.filter(x => x.id !== id);
+      const cargas = deleted?.cargaId ? recalcLinkedCargas(d.cargas, newGasolina) : d.cargas;
+      return { ...d, gasolina: newGasolina, cargas };
+    });
+  }, [recalcLinkedCargas]);
 
   const addPeaje = useCallback((p: any) => {
     setData(d => ({ ...d, peajes: [...d.peajes, { ...p, id: uid(), createdAt: new Date().toISOString() }] }));
