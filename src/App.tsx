@@ -11,7 +11,7 @@ import ControlGasolina from "@/pages/ControlGasolina";
 import ControlPeajes from "@/pages/ControlPeajes";
 import DesgloseSermanal from "@/pages/DesgloseSermanal";
 import ResumenMensual from "@/pages/ResumenMensual";
-import Metas from "@/pages/Metas";
+import DesgloseMes from "@/pages/Metas";
 import Configuracion from "@/pages/Configuracion";
 import NotFound from "@/pages/NotFound";
 
@@ -32,7 +32,7 @@ const App = () => (
               <Route path="/peajes" element={<ControlPeajes />} />
               <Route path="/semanal" element={<DesgloseSermanal />} />
               <Route path="/resumen" element={<ResumenMensual />} />
-              <Route path="/metas" element={<Metas />} />
+              <Route path="/metas" element={<DesgloseMes />} />
               <Route path="/configuracion" element={<Configuracion />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

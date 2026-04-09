@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Truck, Fuel, CreditCard, BarChart3, Target, Settings } from "lucide-react";
+import { LayoutDashboard, Truck, Fuel, CreditCard, BarChart3, CalendarRange } from "lucide-react";
 
 const tabs = [
   { to: "/", icon: LayoutDashboard, label: "Panel" },
@@ -7,7 +7,7 @@ const tabs = [
   { to: "/gasolina", icon: Fuel, label: "Gas" },
   { to: "/peajes", icon: CreditCard, label: "Peajes" },
   { to: "/semanal", icon: BarChart3, label: "Semanal" },
-  { to: "/metas", icon: Target, label: "Metas" },
+  { to: "/metas", icon: CalendarRange, label: "Mes" },
 ];
 
 export default function BottomNav() {
