@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Fuel } from "lucide-react";
 import { format } from "date-fns";
 
 const emptyForm = {
@@ -78,8 +78,16 @@ export default function RegistroCarga() {
     setField(key, value === "" ? 0 : parseFloat(value) || 0);
   };
 
+  // Get linked gas entries for a load
+  const getLinkedGas = (cargaId: string) => data.gasolina.filter(g => g.cargaId === cargaId);
+
   const millasTotal = (form.millasVacias || 0) + (form.millasCargadas || 0);
-  const totalGastos = (form.costoGasolina || 0) + (form.gastosComida || 0) + (form.hospedaje || 0) + (form.otrosGastos || 0);
+  
+  // For the form preview, check if editing a load with linked gas
+  const linkedGasForEdit = editing ? getLinkedGas(editing.id) : [];
+  const linkedGasCost = linkedGasForEdit.reduce((s, g) => s + g.totalGasolina, 0);
+  const effectiveGasCost = linkedGasCost > 0 ? linkedGasCost : (form.costoGasolina || 0);
+  const totalGastos = effectiveGasCost + (form.gastosComida || 0) + (form.hospedaje || 0) + (form.otrosGastos || 0);
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
   const gananciaPorMilla = millasTotal > 0 ? gananciaNeta / millasTotal : 0;
 
@@ -117,14 +125,23 @@ export default function RegistroCarga() {
                 </div>
                 <div className="bg-muted p-2 rounded text-sm">Millas totales: <strong>{formatNumber(millasTotal, 0)}</strong></div>
                 <div><Label>Pago recibido ($)</Label><Input type="number" value={form.pagoRecibido || ""} onChange={e => numField("pagoRecibido", e.target.value)} /></div>
+                
+                {linkedGasForEdit.length > 0 ? (
+                  <div className="bg-primary/10 border border-primary/20 p-3 rounded space-y-1">
+                    <div className="flex items-center gap-1 text-sm font-medium text-primary">
+                      <Fuel className="w-4 h-4" /> Gasolina vinculada: {formatMoney(linkedGasCost)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Se usa el costo de las entradas vinculadas desde Control de Gasolina.</p>
+                  </div>
+                ) : (
+                  <div><Label>Gasolina ($) <span className="text-muted-foreground font-normal">(manual)</span></Label><Input type="number" value={form.costoGasolina || ""} onChange={e => numField("costoGasolina", e.target.value)} /></div>
+                )}
+                
                 <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Gasolina ($)</Label><Input type="number" value={form.costoGasolina || ""} onChange={e => numField("costoGasolina", e.target.value)} /></div>
                   <div><Label>Comida ($)</Label><Input type="number" value={form.gastosComida || ""} onChange={e => numField("gastosComida", e.target.value)} /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
                   <div><Label>Hospedaje ($)</Label><Input type="number" value={form.hospedaje || ""} onChange={e => numField("hospedaje", e.target.value)} /></div>
-                  <div><Label>Otros gastos ($)</Label><Input type="number" value={form.otrosGastos || ""} onChange={e => numField("otrosGastos", e.target.value)} /></div>
                 </div>
+                <div><Label>Otros gastos ($)</Label><Input type="number" value={form.otrosGastos || ""} onChange={e => numField("otrosGastos", e.target.value)} /></div>
                 <div className="bg-muted p-3 rounded space-y-1 text-sm">
                   <div>Total gastos: <strong className="text-destructive">{formatMoney(totalGastos)}</strong></div>
                   <div>Ganancia neta: <strong className={gananciaNeta >= 0 ? "text-success" : "text-destructive"}>{formatMoney(gananciaNeta)}</strong></div>
@@ -147,40 +164,58 @@ export default function RegistroCarga() {
         </div>
       ) : (
         <div className="px-4 space-y-2">
-          {sorted.map(c => (
-            <div key={c.id} className="bg-card border border-border rounded-lg overflow-hidden">
-              <button
-                className="w-full p-3 flex items-center justify-between text-left"
-                onClick={() => setExpanded(expanded === c.id ? null : c.id)}
-              >
-                <div>
-                  <div className="text-sm font-semibold">{c.ubicacionRecogida} → {c.ubicacionEntrega}</div>
-                  <div className="text-xs text-muted-foreground">{c.fechaRecogida}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${c.gananciaNeta >= 0 ? "text-success" : "text-destructive"}`}>
-                    {formatMoney(c.gananciaNeta)}
-                  </span>
-                  {expanded === c.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </div>
-              </button>
-              {expanded === c.id && (
-                <div className="px-3 pb-3 border-t border-border pt-2 text-sm space-y-1 animate-slide-up">
-                  <div className="grid grid-cols-2 gap-1">
-                    <span className="text-muted-foreground">Pago:</span><span className="font-medium">{formatMoney(c.pagoRecibido)}</span>
-                    <span className="text-muted-foreground">Millas:</span><span>{formatNumber(c.millasTotal, 0)}</span>
-                    <span className="text-muted-foreground">Gastos:</span><span className="text-destructive">{formatMoney(c.totalGastos)}</span>
-                    <span className="text-muted-foreground">$/Milla:</span><span>{formatMoney(c.gananciaPorMilla)}</span>
+          {sorted.map(c => {
+            const linkedGas = getLinkedGas(c.id);
+            const linkedTotal = linkedGas.reduce((s, g) => s + g.totalGasolina, 0);
+            return (
+              <div key={c.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                <button
+                  className="w-full p-3 flex items-center justify-between text-left"
+                  onClick={() => setExpanded(expanded === c.id ? null : c.id)}
+                >
+                  <div>
+                    <div className="text-sm font-semibold">{c.ubicacionRecogida} → {c.ubicacionEntrega}</div>
+                    <div className="text-xs text-muted-foreground">{c.fechaRecogida}</div>
                   </div>
-                  {c.notas && <p className="text-muted-foreground italic">{c.notas}</p>}
-                  <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" onClick={() => handleOpen(c)}><Pencil className="w-3 h-3 mr-1" /> Editar</Button>
-                    <Button size="sm" variant="destructive" onClick={() => deleteCarga(c.id)}><Trash2 className="w-3 h-3 mr-1" /> Eliminar</Button>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-bold ${c.gananciaNeta >= 0 ? "text-success" : "text-destructive"}`}>
+                      {formatMoney(c.gananciaNeta)}
+                    </span>
+                    {expanded === c.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                </button>
+                {expanded === c.id && (
+                  <div className="px-3 pb-3 border-t border-border pt-2 text-sm space-y-2 animate-slide-up">
+                    <div className="grid grid-cols-2 gap-1">
+                      <span className="text-muted-foreground">Pago:</span><span className="font-medium">{formatMoney(c.pagoRecibido)}</span>
+                      <span className="text-muted-foreground">Millas:</span><span>{formatNumber(c.millasTotal, 0)}</span>
+                      <span className="text-muted-foreground">Gastos:</span><span className="text-destructive">{formatMoney(c.totalGastos)}</span>
+                      <span className="text-muted-foreground">$/Milla:</span><span>{formatMoney(c.gananciaPorMilla)}</span>
+                    </div>
+                    
+                    {linkedGas.length > 0 && (
+                      <div className="bg-primary/10 border border-primary/20 rounded p-2 space-y-1">
+                        <div className="flex items-center gap-1 font-medium text-primary text-xs">
+                          <Fuel className="w-3 h-3" /> Gasolina asociada ({formatMoney(linkedTotal)})
+                        </div>
+                        {linkedGas.map(g => (
+                          <div key={g.id} className="text-xs text-muted-foreground pl-4">
+                            {g.fecha} · {g.gasolinera || "Gasolinera"} · {g.galones} gal · {formatMoney(g.totalGasolina)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {c.notas && <p className="text-muted-foreground italic">{c.notas}</p>}
+                    <div className="flex gap-2 pt-1">
+                      <Button size="sm" variant="outline" onClick={() => handleOpen(c)}><Pencil className="w-3 h-3 mr-1" /> Editar</Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteCarga(c.id)}><Trash2 className="w-3 h-3 mr-1" /> Eliminar</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

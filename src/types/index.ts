@@ -34,6 +34,7 @@ export interface RegistroGasolina {
   totalGastado: number; // auto
   metodoPago: string;
   notas: string;
+  cargaId?: string; // optional link to a load
   createdAt: string;
 }
 

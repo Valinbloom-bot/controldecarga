@@ -67,8 +67,15 @@ export function computeWeeklySummary(
   const totalCargas = wCargas.length;
   const millasTotal = wCargas.reduce((s, c) => s + c.millasTotal, 0);
   const ingresosTotal = wCargas.reduce((s, c) => s + c.pagoRecibido, 0);
-  const gastoGasolina = wGas.reduce((s, g) => s + g.totalGasolina, 0) + wCargas.reduce((s, c) => s + c.costoGasolina, 0);
-  const gastoComida = wCargas.reduce((s, c) => s + c.gastosComida, 0) + wGas.reduce((s, g) => s + g.snackComida, 0);
+  // Unlinked gas = gas not tied to any load; linked gas is already in load's totalGastos
+  const unlinkedGas = wGas.filter(g => !g.cargaId);
+  // Gas from loads (already includes linked gas cost) + unlinked gas entries
+  const gastoGasolinaFromLoads = wCargas.reduce((s, c) => {
+    const linkedCost = wGas.filter(g => g.cargaId === c.id).reduce((a, g) => a + g.totalGasolina, 0);
+    return s + (linkedCost > 0 ? linkedCost : (c.costoGasolina || 0));
+  }, 0);
+  const gastoGasolina = gastoGasolinaFromLoads + unlinkedGas.reduce((s, g) => s + g.totalGasolina, 0);
+  const gastoComida = wCargas.reduce((s, c) => s + c.gastosComida, 0) + unlinkedGas.reduce((s, g) => s + g.snackComida, 0);
   const gastoHospedaje = wCargas.reduce((s, c) => s + c.hospedaje, 0);
   const gastoPeajes = wPeajes.reduce((s, p) => s + p.monto, 0);
   const otrosGastos = wCargas.reduce((s, c) => s + c.otrosGastos, 0);
@@ -116,8 +123,13 @@ export function computeMonthlySummary(
   const uniqueDays = new Set(mCargas.map(c => c.fechaRecogida)).size;
   const millasTotal = mCargas.reduce((s, c) => s + c.millasTotal, 0);
   const ingresosTotal = mCargas.reduce((s, c) => s + c.pagoRecibido, 0);
-  const gastoGasolina = mGas.reduce((s, g) => s + g.totalGasolina, 0) + mCargas.reduce((s, c) => s + c.costoGasolina, 0);
-  const gastoComida = mCargas.reduce((s, c) => s + c.gastosComida, 0) + mGas.reduce((s, g) => s + g.snackComida, 0);
+  const unlinkedGas = mGas.filter(g => !g.cargaId);
+  const gastoGasolinaFromLoads = mCargas.reduce((s, c) => {
+    const linkedCost = mGas.filter(g => g.cargaId === c.id).reduce((a, g) => a + g.totalGasolina, 0);
+    return s + (linkedCost > 0 ? linkedCost : (c.costoGasolina || 0));
+  }, 0);
+  const gastoGasolina = gastoGasolinaFromLoads + unlinkedGas.reduce((s, g) => s + g.totalGasolina, 0);
+  const gastoComida = mCargas.reduce((s, c) => s + c.gastosComida, 0) + unlinkedGas.reduce((s, g) => s + g.snackComida, 0);
   const gastoHospedaje = mCargas.reduce((s, c) => s + c.hospedaje, 0);
   const gastoPeajes = mPeajes.reduce((s, p) => s + p.monto, 0);
   const otrosGastos = mCargas.reduce((s, c) => s + c.otrosGastos, 0);
