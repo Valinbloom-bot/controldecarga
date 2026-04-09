@@ -67,8 +67,10 @@ export function computeWeeklySummary(
   const totalCargas = wCargas.length;
   const millasTotal = wCargas.reduce((s, c) => s + c.millasTotal, 0);
   const ingresosTotal = wCargas.reduce((s, c) => s + c.pagoRecibido, 0);
-  const gastoGasolina = wGas.reduce((s, g) => s + g.totalGasolina, 0) + wCargas.reduce((s, c) => s + c.costoGasolina, 0);
-  const gastoComida = wCargas.reduce((s, c) => s + c.gastosComida, 0) + wGas.reduce((s, g) => s + g.snackComida, 0);
+  // For gas cost: use linked gas totals from loads + unlinked gas entries (avoid double counting)
+  const unlinkedGas = wGas.filter(g => !g.cargaId);
+  const gastoGasolina = unlinkedGas.reduce((s, g) => s + g.totalGasolina, 0) + wCargas.reduce((s, c) => s + c.totalGastos - (c.gastosComida || 0) - (c.hospedaje || 0) - (c.otrosGastos || 0), 0);
+  const gastoComida = wCargas.reduce((s, c) => s + c.gastosComida, 0) + unlinkedGas.reduce((s, g) => s + g.snackComida, 0);
   const gastoHospedaje = wCargas.reduce((s, c) => s + c.hospedaje, 0);
   const gastoPeajes = wPeajes.reduce((s, p) => s + p.monto, 0);
   const otrosGastos = wCargas.reduce((s, c) => s + c.otrosGastos, 0);
