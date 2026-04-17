@@ -1,165 +1,362 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { AppData, Carga, RegistroGasolina, RegistroPeaje, Meta, defaultAppData } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AppContextType {
   data: AppData;
-  addCarga: (c: Omit<Carga, "id" | "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla" | "createdAt">) => void;
-  updateCarga: (c: Carga) => void;
-  deleteCarga: (id: string) => void;
-  addGasolina: (g: Omit<RegistroGasolina, "id" | "totalGasolina" | "totalGastado" | "createdAt">) => void;
-  updateGasolina: (g: RegistroGasolina) => void;
-  deleteGasolina: (id: string) => void;
-  addPeaje: (p: Omit<RegistroPeaje, "id" | "createdAt">) => void;
-  updatePeaje: (p: RegistroPeaje) => void;
-  deletePeaje: (id: string) => void;
-  setMeta: (m: Omit<Meta, "id">) => void;
+  loading: boolean;
+  addCarga: (c: Omit<Carga, "id" | "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla" | "createdAt">) => Promise<void>;
+  updateCarga: (c: Carga) => Promise<void>;
+  deleteCarga: (id: string) => Promise<void>;
+  addGasolina: (g: Omit<RegistroGasolina, "id" | "totalGasolina" | "totalGastado" | "createdAt">) => Promise<void>;
+  updateGasolina: (g: RegistroGasolina) => Promise<void>;
+  deleteGasolina: (id: string) => Promise<void>;
+  addPeaje: (p: Omit<RegistroPeaje, "id" | "createdAt">) => Promise<void>;
+  updatePeaje: (p: RegistroPeaje) => Promise<void>;
+  deletePeaje: (id: string) => Promise<void>;
+  setMeta: (m: Omit<Meta, "id">) => Promise<void>;
   toggleDarkMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
-function calcCarga(c: Omit<Carga, "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla"> & Partial<Pick<Carga, "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla">>, linkedGasCost: number = 0): Carga {
-  const millasTotal = (c.millasVacias || 0) + (c.millasCargadas || 0);
-  // If there are linked gas entries, use that cost; otherwise fall back to manual costoGasolina
-  const gasolinaCost = linkedGasCost > 0 ? linkedGasCost : (c.costoGasolina || 0);
-  const totalGastos = gasolinaCost + (c.gastosComida || 0) + (c.hospedaje || 0) + (c.otrosGastos || 0);
-  const gananciaNeta = (c.pagoRecibido || 0) - totalGastos;
-  const gananciaPorMilla = millasTotal > 0 ? gananciaNeta / millasTotal : 0;
-  const ingresoPorMilla = millasTotal > 0 ? (c.pagoRecibido || 0) / millasTotal : 0;
-  return { ...c, millasTotal, totalGastos, gananciaNeta, gananciaPorMilla, ingresoPorMilla } as Carga;
+const DARK_KEY = "control-cargas-dark";
+
+// ---------- mappers ----------
+function rowToCarga(r: any): Carga {
+  const millasVacias = Number(r.millas_vacias) || 0;
+  const millasCargadas = Number(r.millas_cargadas) || 0;
+  const millasTotal = millasVacias + millasCargadas;
+  const pagoRecibido = Number(r.pago_recibido) || 0;
+  const costoGasolina = Number(r.costo_gasolina) || 0;
+  return {
+    id: r.id,
+    fechaRecogida: r.fecha_recogida ?? "",
+    horaRecogida: r.hora_recogida ?? "",
+    ubicacionRecogida: r.ubicacion_recogida ?? "",
+    fechaEntrega: r.fecha_entrega ?? "",
+    horaEntrega: r.hora_entrega ?? "",
+    ubicacionEntrega: r.ubicacion_entrega ?? "",
+    millasVacias,
+    millasCargadas,
+    millasTotal,
+    pagoRecibido,
+    costoGasolina,
+    gastosComida: Number(r.gastos_comida) || 0,
+    hospedaje: Number(r.hospedaje) || 0,
+    otrosGastos: Number(r.otros_gastos) || 0,
+    totalGastos: 0, // recalculated below
+    gananciaNeta: 0,
+    gananciaPorMilla: 0,
+    ingresoPorMilla: 0,
+    notas: r.notas ?? "",
+    createdAt: r.created_at,
+  };
 }
 
-function calcGasolina(g: Omit<RegistroGasolina, "totalGasolina" | "totalGastado"> & Partial<Pick<RegistroGasolina, "totalGasolina" | "totalGastado">>): RegistroGasolina {
-  const totalGasolina = (g.galones || 0) * (g.precioPorGalon || 0);
-  const totalGastado = totalGasolina + (g.snackComida || 0);
-  return { ...g, totalGasolina, totalGastado } as RegistroGasolina;
+function cargaToRow(c: Partial<Carga>, userId: string) {
+  return {
+    user_id: userId,
+    fecha_recogida: c.fechaRecogida,
+    hora_recogida: c.horaRecogida,
+    ubicacion_recogida: c.ubicacionRecogida,
+    fecha_entrega: c.fechaEntrega,
+    hora_entrega: c.horaEntrega,
+    ubicacion_entrega: c.ubicacionEntrega,
+    millas_vacias: c.millasVacias ?? 0,
+    millas_cargadas: c.millasCargadas ?? 0,
+    pago_recibido: c.pagoRecibido ?? 0,
+    costo_gasolina: c.costoGasolina ?? 0,
+    gastos_comida: c.gastosComida ?? 0,
+    hospedaje: c.hospedaje ?? 0,
+    otros_gastos: c.otrosGastos ?? 0,
+    notas: c.notas ?? "",
+  };
 }
 
-const STORAGE_KEY = "control-cargas-data";
+function rowToGas(r: any): RegistroGasolina {
+  const galones = Number(r.galones) || 0;
+  const precioPorGalon = Number(r.precio_por_galon) || 0;
+  const totalGasolina = galones * precioPorGalon;
+  const snackComida = Number(r.snack_comida) || 0;
+  return {
+    id: r.id,
+    fecha: r.fecha ?? "",
+    gasolinera: r.gasolinera ?? "",
+    ubicacion: r.ubicacion ?? "",
+    galones,
+    precioPorGalon,
+    totalGasolina,
+    snackComida,
+    totalGastado: totalGasolina + snackComida,
+    metodoPago: r.metodo_pago ?? "",
+    notas: r.notas ?? "",
+    cargaId: r.carga_id ?? undefined,
+    createdAt: r.created_at,
+  };
+}
 
-function loadData(): AppData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...defaultAppData, ...JSON.parse(raw) };
-  } catch {}
-  return defaultAppData;
+function gasToRow(g: Partial<RegistroGasolina>, userId: string) {
+  return {
+    user_id: userId,
+    carga_id: g.cargaId ?? null,
+    fecha: g.fecha,
+    gasolinera: g.gasolinera,
+    ubicacion: g.ubicacion,
+    galones: g.galones ?? 0,
+    precio_por_galon: g.precioPorGalon ?? 0,
+    snack_comida: g.snackComida ?? 0,
+    metodo_pago: g.metodoPago,
+    notas: g.notas ?? "",
+  };
+}
+
+function rowToPeaje(r: any): RegistroPeaje {
+  return {
+    id: r.id,
+    fecha: r.fecha ?? "",
+    ubicacionCarretera: r.ubicacion_carretera ?? "",
+    monto: Number(r.monto) || 0,
+    metodoPago: r.metodo_pago ?? "",
+    notas: r.notas ?? "",
+    createdAt: r.created_at,
+  };
+}
+
+function peajeToRow(p: Partial<RegistroPeaje>, userId: string) {
+  return {
+    user_id: userId,
+    fecha: p.fecha,
+    ubicacion_carretera: p.ubicacionCarretera,
+    monto: p.monto ?? 0,
+    metodo_pago: p.metodoPago,
+    notas: p.notas ?? "",
+  };
+}
+
+function rowToMeta(r: any): Meta {
+  return {
+    id: r.id,
+    mes: r.mes,
+    metaCargas: Number(r.meta_cargas) || 0,
+    metaIngreso: Number(r.meta_ingreso) || 0,
+    metaMillas: Number(r.meta_millas) || 0,
+    metaGananciaNeta: Number(r.meta_ganancia_neta) || 0,
+  };
+}
+
+// ---------- calculation helpers ----------
+function applyCalcs(cargas: Carga[], gasolina: RegistroGasolina[]): Carga[] {
+  return cargas.map((c) => {
+    const linkedCost = gasolina
+      .filter((g) => g.cargaId === c.id)
+      .reduce((s, g) => s + g.totalGasolina, 0);
+    const gasolinaCost = linkedCost > 0 ? linkedCost : c.costoGasolina || 0;
+    const totalGastos = gasolinaCost + (c.gastosComida || 0) + (c.hospedaje || 0) + (c.otrosGastos || 0);
+    const gananciaNeta = (c.pagoRecibido || 0) - totalGastos;
+    const gananciaPorMilla = c.millasTotal > 0 ? gananciaNeta / c.millasTotal : 0;
+    const ingresoPorMilla = c.millasTotal > 0 ? (c.pagoRecibido || 0) / c.millasTotal : 0;
+    return { ...c, totalGastos, gananciaNeta, gananciaPorMilla, ingresoPorMilla };
+  });
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<AppData>(loadData);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
+  const { user } = useAuth();
+  const [data, setData] = useState<AppData>(() => ({
+    ...defaultAppData,
+    darkMode: localStorage.getItem(DARK_KEY) === "1",
+  }));
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", data.darkMode);
+    localStorage.setItem(DARK_KEY, data.darkMode ? "1" : "0");
   }, [data.darkMode]);
 
-  const uid = () => crypto.randomUUID();
+  // Load all data when user changes
+  useEffect(() => {
+    if (!user) {
+      setData((d) => ({ ...defaultAppData, darkMode: d.darkMode }));
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const [{ data: cR }, { data: gR }, { data: pR }, { data: mR }] = await Promise.all([
+        supabase.from("cargas").select("*").order("created_at", { ascending: false }),
+        supabase.from("gasolina").select("*").order("created_at", { ascending: false }),
+        supabase.from("peajes").select("*").order("created_at", { ascending: false }),
+        supabase.from("metas").select("*"),
+      ]);
+      if (cancelled) return;
+      const gasolina = (gR ?? []).map(rowToGas);
+      const cargas = applyCalcs((cR ?? []).map(rowToCarga), gasolina);
+      setData((d) => ({
+        ...d,
+        cargas,
+        gasolina,
+        peajes: (pR ?? []).map(rowToPeaje),
+        metas: (mR ?? []).map(rowToMeta),
+      }));
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
-  // Helper: compute linked gas cost for a given carga id
-  const getLinkedGasCost = useCallback((cargaId: string, gasolinaList: RegistroGasolina[]) => {
-    return gasolinaList
-      .filter(g => g.cargaId === cargaId)
-      .reduce((sum, g) => sum + g.totalGasolina, 0);
+  const refreshCargas = useCallback((cargas: Carga[], gasolina: RegistroGasolina[]) => {
+    setData((d) => ({ ...d, cargas: applyCalcs(cargas, gasolina), gasolina }));
   }, []);
 
-  // Recalculate all cargas that have linked gas entries
-  const recalcLinkedCargas = useCallback((cargas: Carga[], gasolinaList: RegistroGasolina[]): Carga[] => {
-    const linkedCargaIds = new Set(gasolinaList.filter(g => g.cargaId).map(g => g.cargaId!));
-    return cargas.map(c => {
-      if (linkedCargaIds.has(c.id)) {
-        return calcCarga(c, getLinkedGasCost(c.id, gasolinaList));
-      }
-      return c;
+  // ---------- CARGAS ----------
+  const addCarga = useCallback(async (c: any) => {
+    if (!user) return;
+    const { data: row, error } = await supabase
+      .from("cargas")
+      .insert(cargaToRow(c, user.id))
+      .select()
+      .single();
+    if (error || !row) return;
+    setData((d) => {
+      const newCargas = [rowToCarga(row), ...d.cargas];
+      return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
     });
-  }, [getLinkedGasCost]);
+  }, [user]);
 
-  const addCarga = useCallback((c: any) => {
-    setData(d => {
-      const newCarga = calcCarga({ ...c, id: uid(), createdAt: new Date().toISOString() }, getLinkedGasCost(c.id, d.gasolina));
-      return { ...d, cargas: [...d.cargas, newCarga] };
+  const updateCarga = useCallback(async (c: Carga) => {
+    if (!user) return;
+    const { error } = await supabase.from("cargas").update(cargaToRow(c, user.id)).eq("id", c.id);
+    if (error) return;
+    setData((d) => {
+      const newCargas = d.cargas.map((x) => (x.id === c.id ? { ...rowToCarga({ ...cargaToRow(c, user.id), id: c.id, created_at: c.createdAt }) } : x));
+      return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
     });
-  }, [getLinkedGasCost]);
+  }, [user]);
 
-  const updateCarga = useCallback((c: Carga) => {
-    setData(d => ({
-      ...d,
-      cargas: d.cargas.map(x => x.id === c.id ? calcCarga(c, getLinkedGasCost(c.id, d.gasolina)) : x),
-    }));
-  }, [getLinkedGasCost]);
-
-  const deleteCarga = useCallback((id: string) => {
-    setData(d => ({
-      ...d,
-      cargas: d.cargas.filter(x => x.id !== id),
-      // Unlink any gas entries tied to this load
-      gasolina: d.gasolina.map(g => g.cargaId === id ? { ...g, cargaId: undefined } : g),
-    }));
-  }, []);
-
-  const addGasolina = useCallback((g: any) => {
-    setData(d => {
-      const newGas = calcGasolina({ ...g, id: uid(), createdAt: new Date().toISOString() });
-      const newGasolina = [...d.gasolina, newGas];
-      const cargas = newGas.cargaId ? recalcLinkedCargas(d.cargas, newGasolina) : d.cargas;
-      return { ...d, gasolina: newGasolina, cargas };
+  const deleteCarga = useCallback(async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("cargas").delete().eq("id", id);
+    if (error) return;
+    setData((d) => {
+      const newGas = d.gasolina.map((g) => (g.cargaId === id ? { ...g, cargaId: undefined } : g));
+      const newCargas = d.cargas.filter((x) => x.id !== id);
+      return { ...d, cargas: applyCalcs(newCargas, newGas), gasolina: newGas };
     });
-  }, [recalcLinkedCargas]);
+  }, [user]);
 
-  const updateGasolina = useCallback((g: RegistroGasolina) => {
-    setData(d => {
-      const oldGas = d.gasolina.find(x => x.id === g.id);
-      const newGasolina = d.gasolina.map(x => x.id === g.id ? calcGasolina(g) : x);
-      // Recalc affected cargas (old link + new link)
-      const affectedIds = new Set<string>();
-      if (oldGas?.cargaId) affectedIds.add(oldGas.cargaId);
-      if (g.cargaId) affectedIds.add(g.cargaId);
-      const cargas = affectedIds.size > 0 ? recalcLinkedCargas(d.cargas, newGasolina) : d.cargas;
-      return { ...d, gasolina: newGasolina, cargas };
+  // ---------- GASOLINA ----------
+  const addGasolina = useCallback(async (g: any) => {
+    if (!user) return;
+    const { data: row, error } = await supabase
+      .from("gasolina")
+      .insert(gasToRow(g, user.id))
+      .select()
+      .single();
+    if (error || !row) return;
+    setData((d) => {
+      const newGas = [rowToGas(row), ...d.gasolina];
+      return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
     });
-  }, [recalcLinkedCargas]);
+  }, [user]);
 
-  const deleteGasolina = useCallback((id: string) => {
-    setData(d => {
-      const deleted = d.gasolina.find(x => x.id === id);
-      const newGasolina = d.gasolina.filter(x => x.id !== id);
-      const cargas = deleted?.cargaId ? recalcLinkedCargas(d.cargas, newGasolina) : d.cargas;
-      return { ...d, gasolina: newGasolina, cargas };
+  const updateGasolina = useCallback(async (g: RegistroGasolina) => {
+    if (!user) return;
+    const { error } = await supabase.from("gasolina").update(gasToRow(g, user.id)).eq("id", g.id);
+    if (error) return;
+    setData((d) => {
+      const newGas = d.gasolina.map((x) => (x.id === g.id ? rowToGas({ ...gasToRow(g, user.id), id: g.id, created_at: g.createdAt }) : x));
+      return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
     });
-  }, [recalcLinkedCargas]);
+  }, [user]);
 
-  const addPeaje = useCallback((p: any) => {
-    setData(d => ({ ...d, peajes: [...d.peajes, { ...p, id: uid(), createdAt: new Date().toISOString() }] }));
-  }, []);
-
-  const updatePeaje = useCallback((p: RegistroPeaje) => {
-    setData(d => ({ ...d, peajes: d.peajes.map(x => x.id === p.id ? p : x) }));
-  }, []);
-
-  const deletePeaje = useCallback((id: string) => {
-    setData(d => ({ ...d, peajes: d.peajes.filter(x => x.id !== id) }));
-  }, []);
-
-  const setMeta = useCallback((m: Omit<Meta, "id">) => {
-    setData(d => {
-      const existing = d.metas.findIndex(x => x.mes === m.mes);
-      if (existing >= 0) {
-        const updated = [...d.metas];
-        updated[existing] = { ...m, id: updated[existing].id };
-        return { ...d, metas: updated };
-      }
-      return { ...d, metas: [...d.metas, { ...m, id: uid() }] };
+  const deleteGasolina = useCallback(async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("gasolina").delete().eq("id", id);
+    if (error) return;
+    setData((d) => {
+      const newGas = d.gasolina.filter((x) => x.id !== id);
+      return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
     });
-  }, []);
+  }, [user]);
+
+  // ---------- PEAJES ----------
+  const addPeaje = useCallback(async (p: any) => {
+    if (!user) return;
+    const { data: row, error } = await supabase
+      .from("peajes")
+      .insert(peajeToRow(p, user.id))
+      .select()
+      .single();
+    if (error || !row) return;
+    setData((d) => ({ ...d, peajes: [rowToPeaje(row), ...d.peajes] }));
+  }, [user]);
+
+  const updatePeaje = useCallback(async (p: RegistroPeaje) => {
+    if (!user) return;
+    const { error } = await supabase.from("peajes").update(peajeToRow(p, user.id)).eq("id", p.id);
+    if (error) return;
+    setData((d) => ({ ...d, peajes: d.peajes.map((x) => (x.id === p.id ? p : x)) }));
+  }, [user]);
+
+  const deletePeaje = useCallback(async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("peajes").delete().eq("id", id);
+    if (error) return;
+    setData((d) => ({ ...d, peajes: d.peajes.filter((x) => x.id !== id) }));
+  }, [user]);
+
+  // ---------- METAS ----------
+  const setMeta = useCallback(async (m: Omit<Meta, "id">) => {
+    if (!user) return;
+    const { data: row, error } = await supabase
+      .from("metas")
+      .upsert(
+        {
+          user_id: user.id,
+          mes: m.mes,
+          meta_cargas: m.metaCargas,
+          meta_ingreso: m.metaIngreso,
+          meta_millas: m.metaMillas,
+          meta_ganancia_neta: m.metaGananciaNeta,
+        },
+        { onConflict: "user_id,mes" }
+      )
+      .select()
+      .single();
+    if (error || !row) return;
+    setData((d) => {
+      const idx = d.metas.findIndex((x) => x.mes === m.mes);
+      const newMeta = rowToMeta(row);
+      const metas = idx >= 0 ? d.metas.map((x, i) => (i === idx ? newMeta : x)) : [...d.metas, newMeta];
+      return { ...d, metas };
+    });
+  }, [user]);
 
   const toggleDarkMode = useCallback(() => {
-    setData(d => ({ ...d, darkMode: !d.darkMode }));
+    setData((d) => ({ ...d, darkMode: !d.darkMode }));
   }, []);
 
   return (
-    <AppContext.Provider value={{ data, addCarga, updateCarga, deleteCarga, addGasolina, updateGasolina, deleteGasolina, addPeaje, updatePeaje, deletePeaje, setMeta, toggleDarkMode }}>
+    <AppContext.Provider
+      value={{
+        data,
+        loading,
+        addCarga,
+        updateCarga,
+        deleteCarga,
+        addGasolina,
+        updateGasolina,
+        deleteGasolina,
+        addPeaje,
+        updatePeaje,
+        deletePeaje,
+        setMeta,
+        toggleDarkMode,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
