@@ -84,6 +84,7 @@ export type Database = {
           fecha: string | null
           galones: number
           gasolinera: string | null
+          hora: string | null
           id: string
           metodo_pago: string | null
           notas: string | null
@@ -99,6 +100,7 @@ export type Database = {
           fecha?: string | null
           galones?: number
           gasolinera?: string | null
+          hora?: string | null
           id?: string
           metodo_pago?: string | null
           notas?: string | null
@@ -114,6 +116,7 @@ export type Database = {
           fecha?: string | null
           galones?: number
           gasolinera?: string | null
+          hora?: string | null
           id?: string
           metodo_pago?: string | null
           notas?: string | null
