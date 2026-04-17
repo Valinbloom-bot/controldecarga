@@ -88,6 +88,7 @@ export default function ControlPeajes() {
           </>
         }
       />
+      <UsageBanner resource="peajes" />
 
       <div className="px-4 mb-4">
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">

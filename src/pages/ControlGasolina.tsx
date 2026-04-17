@@ -140,6 +140,7 @@ export default function ControlGasolina() {
           </>
         }
       />
+      <UsageBanner resource="gasolina" />
 
       {sorted.length === 0 ? (
         <div className="text-center text-muted-foreground py-16"><p>Sin registros de gasolina</p></div>

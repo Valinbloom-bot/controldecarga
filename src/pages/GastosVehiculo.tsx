@@ -143,6 +143,7 @@ export default function GastosVehiculo() {
           </Dialog>
         }
       />
+      <UsageBanner resource="gastosVehiculo" />
 
       <div className="px-4 mb-3">
         <div className="bg-card border border-border rounded-lg p-3 flex items-center justify-between">
