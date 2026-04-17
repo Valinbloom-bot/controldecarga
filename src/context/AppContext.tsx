@@ -212,11 +212,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [{ data: cR }, { data: gR }, { data: pR }, { data: mR }] = await Promise.all([
+      const [{ data: cR }, { data: gR }, { data: pR }, { data: mR }, { data: vR }] = await Promise.all([
         supabase.from("cargas").select("*").order("created_at", { ascending: false }),
         supabase.from("gasolina").select("*").order("created_at", { ascending: false }),
         supabase.from("peajes").select("*").order("created_at", { ascending: false }),
         supabase.from("metas").select("*"),
+        supabase.from("gastos_vehiculo" as any).select("*").order("created_at", { ascending: false }),
       ]);
       if (cancelled) return;
       const gasolina = (gR ?? []).map(rowToGas);
@@ -227,6 +228,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         gasolina,
         peajes: (pR ?? []).map(rowToPeaje),
         metas: (mR ?? []).map(rowToMeta),
+        gastosVehiculo: (vR ?? []).map(rowToGastoVehiculo),
       }));
       setLoading(false);
     })();
