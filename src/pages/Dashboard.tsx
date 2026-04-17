@@ -12,12 +12,12 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const now = new Date();
   const currentMonth = format(now, "yyyy-MM");
-  const monthly = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, currentMonth);
+  const monthly = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, currentMonth, data.gastosVehiculo);
 
   // Last 4 weeks chart data
   const weeklyChart = Array.from({ length: 4 }, (_, i) => {
     const weekDate = addWeeks(now, -3 + i);
-    const summary = computeWeeklySummary(data.cargas, data.gasolina, data.peajes, weekDate);
+    const summary = computeWeeklySummary(data.cargas, data.gasolina, data.peajes, weekDate, data.gastosVehiculo);
     const weekStart = startOfWeek(weekDate, { weekStartsOn: 1 });
     return {
       name: format(weekStart, "dd/MM"),
