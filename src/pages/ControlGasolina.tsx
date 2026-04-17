@@ -26,7 +26,7 @@ const buildEmptyForm = () => ({
   metodoPago: "Efectivo",
   notas: "",
   cargaId: "",
-};
+});
 
 export default function ControlGasolina() {
   const { data, addGasolina, updateGasolina, deleteGasolina } = useAppData();
