@@ -1,0 +1,1 @@
+ALTER TABLE public.gasolina ADD COLUMN IF NOT EXISTS hora text;

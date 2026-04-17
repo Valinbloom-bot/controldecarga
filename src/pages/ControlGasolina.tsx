@@ -13,8 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Link2 } from "lucide-react";
 import { format } from "date-fns";
 
-const emptyForm = {
+const nowTime = () => format(new Date(), "HH:mm");
+
+const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),
+  hora: nowTime(),
   gasolinera: "",
   ubicacion: "",
   galones: 0,
@@ -23,21 +26,21 @@ const emptyForm = {
   metodoPago: "Efectivo",
   notas: "",
   cargaId: "",
-};
+});
 
 export default function ControlGasolina() {
   const { data, addGasolina, updateGasolina, deleteGasolina } = useAppData();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroGasolina | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(buildEmptyForm);
 
   const handleOpen = (g?: RegistroGasolina) => {
     if (g) {
       setEditing(g);
-      setForm({ fecha: g.fecha, gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
+      setForm({ fecha: g.fecha, hora: g.hora || nowTime(), gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
     } else {
       setEditing(null);
-      setForm(emptyForm);
+      setForm(buildEmptyForm());
     }
     setOpen(true);
   };
@@ -84,7 +87,10 @@ export default function ControlGasolina() {
             <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md">
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Nueva"} Gasolina</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
+                  <div><Label>Hora</Label><Input type="time" value={form.hora} onChange={e => setField("hora", e.target.value)} /></div>
+                </div>
                 <div><Label>Gasolinera</Label><Input value={form.gasolinera} onChange={e => setField("gasolinera", e.target.value)} placeholder="Nombre" /></div>
                 <div><Label>Ubicación</Label><Input value={form.ubicacion} onChange={e => setField("ubicacion", e.target.value)} placeholder="Ciudad, Estado" /></div>
                 <div className="grid grid-cols-2 gap-2">
@@ -133,7 +139,7 @@ export default function ControlGasolina() {
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-semibold text-sm">{g.gasolinera || "Gasolinera"}</div>
-                  <div className="text-xs text-muted-foreground">{g.fecha} · {g.ubicacion}</div>
+                  <div className="text-xs text-muted-foreground">{g.fecha}{g.hora ? ` · ${g.hora}` : ""} · {g.ubicacion}</div>
                   <div className="text-xs mt-1">{g.galones} gal × {formatMoney(g.precioPorGalon)}</div>
                   {g.cargaId && (
                     <div className="text-xs mt-1 flex items-center gap-1 text-primary">
