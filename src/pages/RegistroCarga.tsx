@@ -102,9 +102,10 @@ export default function RegistroCarga() {
         action={
           <>
           <ExportMenu
-            onCSV={() => exportCargasCSV(data.cargas)}
-            onPDF={() => exportCargasPDF(data.cargas)}
-            disabled={data.cargas.length === 0}
+            items={data.cargas}
+            getDate={(c) => c.fechaRecogida}
+            onCSV={(f) => exportCargasCSV(f)}
+            onPDF={(f) => exportCargasPDF(f)}
             emptyMessage="No hay cargas"
           />
           <Dialog open={open} onOpenChange={setOpen}>

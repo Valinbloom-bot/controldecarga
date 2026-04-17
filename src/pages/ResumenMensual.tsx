@@ -2,12 +2,18 @@ import { useState } from "react";
 import { useAppData } from "@/context/AppContext";
 import { computeMonthlySummary, formatMoney, formatNumber } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
-import ExportMenu from "@/components/ExportMenu";
 import { exportResumenMensualCSV, exportResumenMensualPDF } from "@/lib/exports";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, FileText } from "lucide-react";
 import { format, addMonths } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
 
 export default function ResumenMensual() {
   const { data } = useAppData();
@@ -22,10 +28,27 @@ export default function ResumenMensual() {
       <PageHeader
         title="Resumen General"
         action={
-          <ExportMenu
-            onCSV={() => exportResumenMensualCSV(data.cargas, data.gasolina, data.peajes, yearMonth)}
-            onPDF={() => exportResumenMensualPDF(data.cargas, data.gasolina, data.peajes, yearMonth)}
-          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Download className="w-4 h-4 mr-1" /> Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                try { exportResumenMensualCSV(data.cargas, data.gasolina, data.peajes, yearMonth); toast.success("Exportación lista"); }
+                catch (e) { console.error(e); toast.error("Error al exportar"); }
+              }}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> Exportar CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                try { exportResumenMensualPDF(data.cargas, data.gasolina, data.peajes, yearMonth); toast.success("Exportación lista"); }
+                catch (e) { console.error(e); toast.error("Error al exportar"); }
+              }}>
+                <FileText className="w-4 h-4 mr-2" /> Exportar PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
 
