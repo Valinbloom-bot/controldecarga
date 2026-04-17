@@ -17,7 +17,11 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 const emptyForm = {
+  fechaRecogida: format(new Date(), "yyyy-MM-dd"),
+  horaRecogida: format(new Date(), "HH:mm"),
   ubicacionRecogida: "",
+  fechaEntrega: format(new Date(), "yyyy-MM-dd"),
+  horaEntrega: "",
   ubicacionEntrega: "",
   millasTotal: 0,
   pagoRecibido: 0,
