@@ -194,3 +194,158 @@ export function exportResumenMensualPDF(cargas: Carga[], gas: RegistroGasolina[]
 
   doc.save(`resumen-${yearMonth}.pdf`);
 }
+
+// ---------- Full business export (multi-section PDF) ----------
+export function exportNegocioCompletoPDF(
+  cargas: Carga[],
+  gas: RegistroGasolina[],
+  peajes: RegistroPeaje[],
+  yearMonth?: string,
+) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // ===== Cover =====
+  doc.setFontSize(24);
+  doc.text("Reporte Completo del Negocio", 40, 80);
+  doc.setFontSize(12);
+  doc.setTextColor(120);
+  doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 40, 105);
+  if (yearMonth) doc.text(`Resumen del mes: ${yearMonth}`, 40, 122);
+  doc.setTextColor(0);
+
+  doc.setFontSize(11);
+  const totalIngresos = cargas.reduce((s, c) => s + c.pagoRecibido, 0);
+  const totalGastosCargas = cargas.reduce((s, c) => s + c.totalGastos, 0);
+  const totalGanancia = cargas.reduce((s, c) => s + c.gananciaNeta, 0);
+  const totalGas = gas.reduce((s, g) => s + g.totalGastado, 0);
+  const totalPeajes = peajes.reduce((s, p) => s + p.monto, 0);
+
+  autoTable(doc, {
+    startY: 150,
+    head: [["Resumen general", "Valor"]],
+    body: [
+      ["Total de cargas", String(cargas.length)],
+      ["Ingresos totales", formatMoney(totalIngresos)],
+      ["Gastos totales (cargas)", formatMoney(totalGastosCargas)],
+      ["Total gasolina", formatMoney(totalGas)],
+      ["Total peajes", formatMoney(totalPeajes)],
+      ["Ganancia neta", formatMoney(totalGanancia)],
+    ],
+    ...pdfTheme,
+  });
+
+  // ===== Resumen mensual (si hay mes) =====
+  if (yearMonth) {
+    const m = computeMonthlySummary(cargas, gas, peajes, yearMonth);
+    doc.addPage();
+    doc.setFontSize(18);
+    doc.text(`Resumen del Mes — ${yearMonth}`, 40, 50);
+
+    autoTable(doc, {
+      startY: 80,
+      head: [["Actividad", "Valor"]],
+      body: [
+        ["Total cargas", String(m.totalCargas)],
+        ["Días trabajados", String(m.diasTrabajados)],
+        ["Millas totales", formatNumber(m.millasTotal, 0)],
+        ["Ingresos totales", formatMoney(m.ingresosTotal)],
+        ["Ingreso prom. por carga", formatMoney(m.ingresoPromedioPorCarga)],
+      ],
+      ...pdfTheme,
+    });
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 15,
+      head: [["Gastos", "Valor"]],
+      body: [
+        ["Gasolina", formatMoney(m.gastoGasolina)],
+        ["Comida", formatMoney(m.gastoComida)],
+        ["Hospedaje", formatMoney(m.gastoHospedaje)],
+        ["Peajes", formatMoney(m.gastoPeajes)],
+        ["Otros", formatMoney(m.otrosGastos)],
+        ["Gastos totales", formatMoney(m.gastosTotal)],
+      ],
+      ...pdfTheme,
+    });
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 15,
+      head: [["Resultados", "Valor"]],
+      body: [
+        ["Ganancia neta", formatMoney(m.gananciaNeta)],
+        ["Ganancia por milla", formatMoney(m.gananciaPorMilla)],
+      ],
+      headStyles: { fillColor: [22, 163, 74] as [number, number, number], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 9, fontStyle: "bold" },
+      margin: { left: 40, right: 40 },
+    });
+  }
+
+  // ===== Cargas =====
+  doc.addPage();
+  doc.setFontSize(18);
+  doc.text("Registro de Cargas", 40, 50);
+  if (cargas.length === 0) {
+    doc.setFontSize(11); doc.setTextColor(120);
+    doc.text("Sin registros", 40, 80); doc.setTextColor(0);
+  } else {
+    autoTable(doc, {
+      startY: 70,
+      head: [["Fecha","Origen","Destino","Millas","Pago","Gastos","Ganancia","$/Mi"]],
+      body: cargas.map(c => [
+        c.fechaRecogida, c.ubicacionRecogida, c.ubicacionEntrega,
+        formatNumber(c.millasTotal, 0), formatMoney(c.pagoRecibido),
+        formatMoney(c.totalGastos), formatMoney(c.gananciaNeta), formatMoney(c.gananciaPorMilla),
+      ]),
+      ...pdfTheme,
+    });
+  }
+
+  // ===== Gasolina =====
+  doc.addPage();
+  doc.setFontSize(18);
+  doc.text("Control de Gasolina", 40, 50);
+  if (gas.length === 0) {
+    doc.setFontSize(11); doc.setTextColor(120);
+    doc.text("Sin registros", 40, 80); doc.setTextColor(0);
+  } else {
+    autoTable(doc, {
+      startY: 70,
+      head: [["Fecha","Gasolinera","Ubicación","Galones","Precio/gal","Total gas","Snack","Total","Método"]],
+      body: gas.map(g => [
+        g.fecha, g.gasolinera, g.ubicacion,
+        formatNumber(g.galones, 2), formatMoney(g.precioPorGalon),
+        formatMoney(g.totalGasolina), formatMoney(g.snackComida),
+        formatMoney(g.totalGastado), g.metodoPago,
+      ]),
+      ...pdfTheme,
+    });
+  }
+
+  // ===== Peajes =====
+  doc.addPage();
+  doc.setFontSize(18);
+  doc.text("Control de Peajes", 40, 50);
+  if (peajes.length === 0) {
+    doc.setFontSize(11); doc.setTextColor(120);
+    doc.text("Sin registros", 40, 80); doc.setTextColor(0);
+  } else {
+    autoTable(doc, {
+      startY: 70,
+      head: [["Fecha","Ubicación/Carretera","Monto","Método pago","Notas"]],
+      body: peajes.map(p => [p.fecha, p.ubicacionCarretera, formatMoney(p.monto), p.metodoPago, p.notas]),
+      ...pdfTheme,
+    });
+  }
+
+  // Footer page numbers
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`Página ${i} de ${pageCount}`, pageWidth - 80, doc.internal.pageSize.getHeight() - 20);
+    doc.setTextColor(0);
+  }
+
+  doc.save(`negocio-completo-${ts()}.pdf`);
+}
