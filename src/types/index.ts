@@ -49,6 +49,25 @@ export interface RegistroPeaje {
   createdAt: string;
 }
 
+export interface GastoVehiculo {
+  id: string;
+  fecha: string;
+  categoria: string;
+  descripcion: string;
+  monto: number;
+  notas: string;
+  createdAt: string;
+}
+
+export const CATEGORIAS_GASTO_VEHICULO = [
+  "Mantenimiento",
+  "Llantas",
+  "Seguro",
+  "Registro/Permisos",
+  "Reparaciones",
+  "Otros",
+] as const;
+
 export interface Meta {
   id: string;
   metaCargas: number;
@@ -62,6 +81,7 @@ export interface AppData {
   cargas: Carga[];
   gasolina: RegistroGasolina[];
   peajes: RegistroPeaje[];
+  gastosVehiculo: GastoVehiculo[];
   metas: Meta[];
   darkMode: boolean;
 }
@@ -70,6 +90,7 @@ export const defaultAppData: AppData = {
   cargas: [],
   gasolina: [],
   peajes: [],
+  gastosVehiculo: [],
   metas: [],
   darkMode: false,
 };

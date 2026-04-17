@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import RegistroCarga from "@/pages/RegistroCarga";
 import ControlGasolina from "@/pages/ControlGasolina";
 import ControlPeajes from "@/pages/ControlPeajes";
+import GastosVehiculo from "@/pages/GastosVehiculo";
 import DesgloseSermanal from "@/pages/DesgloseSermanal";
 import ResumenMensual from "@/pages/ResumenMensual";
 import DesgloseMes from "@/pages/Metas";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/cargas" element={<ProtectedShell><RegistroCarga /></ProtectedShell>} />
               <Route path="/gasolina" element={<ProtectedShell><ControlGasolina /></ProtectedShell>} />
               <Route path="/peajes" element={<ProtectedShell><ControlPeajes /></ProtectedShell>} />
+              <Route path="/gastos-vehiculo" element={<ProtectedShell><GastosVehiculo /></ProtectedShell>} />
               <Route path="/semanal" element={<ProtectedShell><DesgloseSermanal /></ProtectedShell>} />
               <Route path="/resumen" element={<ProtectedShell><ResumenMensual /></ProtectedShell>} />
               <Route path="/metas" element={<ProtectedShell><DesgloseMes /></ProtectedShell>} />

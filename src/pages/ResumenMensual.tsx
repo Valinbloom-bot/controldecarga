@@ -21,7 +21,7 @@ export default function ResumenMensual() {
   const monthDate = addMonths(new Date(), monthOffset);
   const yearMonth = format(monthDate, "yyyy-MM");
   const monthLabel = format(monthDate, "MMMM yyyy", { locale: es });
-  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth);
+  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth, data.gastosVehiculo);
 
   return (
     <div className="pb-20">
@@ -83,6 +83,7 @@ export default function ResumenMensual() {
             ["Comida", summary.gastoComida],
             ["Hospedaje", summary.gastoHospedaje],
             ["Peajes", summary.gastoPeajes],
+            ["Vehículo", summary.gastoVehiculo],
             ["Otros", summary.otrosGastos],
           ].map(([l, v]) => (
             <div key={l as string} className="flex justify-between py-1 text-sm">

@@ -1,4 +1,4 @@
-import { Carga, RegistroGasolina, RegistroPeaje } from "@/types";
+import { Carga, RegistroGasolina, RegistroPeaje, GastoVehiculo } from "@/types";
 import { startOfWeek, endOfWeek, format, parseISO, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -46,6 +46,7 @@ export interface WeeklySummary {
   gastoComida: number;
   gastoHospedaje: number;
   gastoPeajes: number;
+  gastoVehiculo: number;
   otrosGastos: number;
   gastosTotal: number;
   gananciaNeta: number;
@@ -57,19 +58,19 @@ export function computeWeeklySummary(
   cargas: Carga[],
   gasolina: RegistroGasolina[],
   peajes: RegistroPeaje[],
-  weekDate: Date
+  weekDate: Date,
+  gastosVehiculo: GastoVehiculo[] = []
 ): WeeklySummary {
   const { start, end } = getWeekRange(weekDate);
   const wCargas = filterByDateRange(cargas, start, end);
   const wGas = filterByDateRange(gasolina, start, end);
   const wPeajes = filterByDateRange(peajes, start, end);
+  const wVeh = filterByDateRange(gastosVehiculo, start, end);
 
   const totalCargas = wCargas.length;
   const millasTotal = wCargas.reduce((s, c) => s + c.millasTotal, 0);
   const ingresosTotal = wCargas.reduce((s, c) => s + c.pagoRecibido, 0);
-  // Unlinked gas = gas not tied to any load; linked gas is already in load's totalGastos
   const unlinkedGas = wGas.filter(g => !g.cargaId);
-  // Gas from loads (already includes linked gas cost) + unlinked gas entries
   const gastoGasolinaFromLoads = wCargas.reduce((s, c) => {
     const linkedCost = wGas.filter(g => g.cargaId === c.id).reduce((a, g) => a + g.totalGasolina, 0);
     return s + (linkedCost > 0 ? linkedCost : (c.costoGasolina || 0));
@@ -78,8 +79,9 @@ export function computeWeeklySummary(
   const gastoComida = wCargas.reduce((s, c) => s + c.gastosComida, 0) + unlinkedGas.reduce((s, g) => s + g.snackComida, 0);
   const gastoHospedaje = wCargas.reduce((s, c) => s + c.hospedaje, 0);
   const gastoPeajes = wPeajes.reduce((s, p) => s + p.monto, 0);
+  const gastoVehiculo = wVeh.reduce((s, v) => s + v.monto, 0);
   const otrosGastos = wCargas.reduce((s, c) => s + c.otrosGastos, 0);
-  const gastosTotal = gastoGasolina + gastoComida + gastoHospedaje + gastoPeajes + otrosGastos;
+  const gastosTotal = gastoGasolina + gastoComida + gastoHospedaje + gastoPeajes + gastoVehiculo + otrosGastos;
   const gananciaNeta = ingresosTotal - gastosTotal;
   const ingresoPromedioPorCarga = totalCargas > 0 ? ingresosTotal / totalCargas : 0;
   const gananciaPorMilla = millasTotal > 0 ? gananciaNeta / millasTotal : 0;
@@ -87,7 +89,7 @@ export function computeWeeklySummary(
   return {
     weekLabel: `${format(start, "dd MMM", { locale: es })} - ${format(end, "dd MMM yyyy", { locale: es })}`,
     start, end, totalCargas, millasTotal, ingresosTotal,
-    gastoGasolina, gastoComida, gastoHospedaje, gastoPeajes, otrosGastos,
+    gastoGasolina, gastoComida, gastoHospedaje, gastoPeajes, gastoVehiculo, otrosGastos,
     gastosTotal, gananciaNeta, ingresoPromedioPorCarga, gananciaPorMilla,
   };
 }
@@ -104,6 +106,7 @@ export interface MonthlySummary {
   gastoComida: number;
   gastoHospedaje: number;
   gastoPeajes: number;
+  gastoVehiculo: number;
   otrosGastos: number;
   gastosTotal: number;
   gananciaNeta: number;
@@ -113,11 +116,13 @@ export function computeMonthlySummary(
   cargas: Carga[],
   gasolina: RegistroGasolina[],
   peajes: RegistroPeaje[],
-  yearMonth: string
+  yearMonth: string,
+  gastosVehiculo: GastoVehiculo[] = []
 ): MonthlySummary {
   const mCargas = filterByMonth(cargas, yearMonth);
   const mGas = filterByMonth(gasolina, yearMonth);
   const mPeajes = filterByMonth(peajes, yearMonth);
+  const mVeh = filterByMonth(gastosVehiculo, yearMonth);
 
   const totalCargas = mCargas.length;
   const uniqueDays = new Set(mCargas.map(c => c.fechaRecogida)).size;
@@ -132,8 +137,9 @@ export function computeMonthlySummary(
   const gastoComida = mCargas.reduce((s, c) => s + c.gastosComida, 0) + unlinkedGas.reduce((s, g) => s + g.snackComida, 0);
   const gastoHospedaje = mCargas.reduce((s, c) => s + c.hospedaje, 0);
   const gastoPeajes = mPeajes.reduce((s, p) => s + p.monto, 0);
+  const gastoVehiculo = mVeh.reduce((s, v) => s + v.monto, 0);
   const otrosGastos = mCargas.reduce((s, c) => s + c.otrosGastos, 0);
-  const gastosTotal = gastoGasolina + gastoComida + gastoHospedaje + gastoPeajes + otrosGastos;
+  const gastosTotal = gastoGasolina + gastoComida + gastoHospedaje + gastoPeajes + gastoVehiculo + otrosGastos;
   const gananciaNeta = ingresosTotal - gastosTotal;
   const ingresoPromedioPorCarga = totalCargas > 0 ? ingresosTotal / totalCargas : 0;
   const gananciaPorMilla = millasTotal > 0 ? gananciaNeta / millasTotal : 0;
@@ -141,7 +147,7 @@ export function computeMonthlySummary(
   return {
     mes: yearMonth, totalCargas, diasTrabajados: uniqueDays, millasTotal, ingresosTotal,
     ingresoPromedioPorCarga, gananciaPorMilla,
-    gastoGasolina, gastoComida, gastoHospedaje, gastoPeajes, otrosGastos,
+    gastoGasolina, gastoComida, gastoHospedaje, gastoPeajes, gastoVehiculo, otrosGastos,
     gastosTotal, gananciaNeta,
   };
 }
