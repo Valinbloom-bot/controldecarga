@@ -6,6 +6,8 @@ import { DollarSign, TrendingUp, TrendingDown, MapPin, Fuel, CreditCard, Truck, 
 import { format, startOfWeek, addWeeks } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useNavigate } from "react-router-dom";
+import TrialBadge from "@/components/TrialBadge";
+import FirstVisitProModal from "@/components/FirstVisitProModal";
 
 export default function Dashboard() {
   const { data } = useAppData();
@@ -36,7 +38,11 @@ export default function Dashboard() {
 
   return (
     <div className="pb-20">
+      <FirstVisitProModal />
       <PageHeader title="Panel Principal" />
+      <div className="px-4 mb-3 flex justify-end">
+        <TrialBadge />
+      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-4 gap-2 px-4 mb-4">
