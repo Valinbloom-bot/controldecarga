@@ -26,11 +26,18 @@ const emptyForm = {
 
 export default function ControlPeajes() {
   const { data, addPeaje, updatePeaje, deletePeaje } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("peajes");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroPeaje | null>(null);
   const [form, setForm] = useState(emptyForm);
 
   const handleOpen = (p?: RegistroPeaje) => {
+    if (!p && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (p) { setEditing(p); setForm({ fecha: p.fecha, ubicacionCarretera: p.ubicacionCarretera, monto: p.monto, metodoPago: p.metodoPago, notas: p.notas }); }
     else { setEditing(null); setForm(emptyForm); }
     setOpen(true);

@@ -26,11 +26,18 @@ const buildEmptyForm = () => ({
 
 export default function GastosVehiculo() {
   const { data, addGastoVehiculo, updateGastoVehiculo, deleteGastoVehiculo } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("gastosVehiculo");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<GastoVehiculo | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
 
   const handleOpen = (g?: GastoVehiculo) => {
+    if (!g && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (g) {
       setEditing(g);
       setForm({

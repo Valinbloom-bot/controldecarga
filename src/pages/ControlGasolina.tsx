@@ -34,11 +34,18 @@ const buildEmptyForm = () => ({
 
 export default function ControlGasolina() {
   const { data, addGasolina, updateGasolina, deleteGasolina } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("gasolina");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroGasolina | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
 
   const handleOpen = (g?: RegistroGasolina) => {
+    if (!g && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (g) {
       setEditing(g);
       setForm({ fecha: g.fecha, hora: g.hora || nowTime(), gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
