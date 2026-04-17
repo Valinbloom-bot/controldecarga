@@ -48,9 +48,10 @@ export default function ControlPeajes() {
         action={
           <>
           <ExportMenu
-            onCSV={() => exportPeajesCSV(data.peajes)}
-            onPDF={() => exportPeajesPDF(data.peajes)}
-            disabled={data.peajes.length === 0}
+            items={data.peajes}
+            getDate={(p) => p.fecha}
+            onCSV={(f) => exportPeajesCSV(f)}
+            onPDF={(f) => exportPeajesPDF(f)}
             emptyMessage="No hay peajes"
           />
           <Dialog open={open} onOpenChange={setOpen}>

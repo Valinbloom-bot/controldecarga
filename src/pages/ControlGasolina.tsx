@@ -71,9 +71,10 @@ export default function ControlGasolina() {
         action={
           <>
           <ExportMenu
-            onCSV={() => exportGasolinaCSV(data.gasolina)}
-            onPDF={() => exportGasolinaPDF(data.gasolina)}
-            disabled={data.gasolina.length === 0}
+            items={data.gasolina}
+            getDate={(g) => g.fecha}
+            onCSV={(f) => exportGasolinaCSV(f)}
+            onPDF={(f) => exportGasolinaPDF(f)}
             emptyMessage="No hay registros de gasolina"
           />
           <Dialog open={open} onOpenChange={setOpen}>
