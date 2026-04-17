@@ -3,6 +3,8 @@ import { useAppData } from "@/context/AppContext";
 import { RegistroGasolina } from "@/types";
 import { formatMoney } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
+import { exportGasolinaCSV, exportGasolinaPDF } from "@/lib/exports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +69,13 @@ export default function ControlGasolina() {
       <PageHeader
         title="Control de Gasolina"
         action={
+          <>
+          <ExportMenu
+            onCSV={() => exportGasolinaCSV(data.gasolina)}
+            onPDF={() => exportGasolinaPDF(data.gasolina)}
+            disabled={data.gasolina.length === 0}
+            emptyMessage="No hay registros de gasolina"
+          />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> Nueva</Button>

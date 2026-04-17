@@ -3,6 +3,8 @@ import { useAppData } from "@/context/AppContext";
 import { Carga } from "@/types";
 import { formatMoney, formatNumber } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
+import { exportCargasCSV, exportCargasPDF } from "@/lib/exports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,6 +100,13 @@ export default function RegistroCarga() {
       <PageHeader
         title="Registro de Carga"
         action={
+          <>
+          <ExportMenu
+            onCSV={() => exportCargasCSV(data.cargas)}
+            onPDF={() => exportCargasPDF(data.cargas)}
+            disabled={data.cargas.length === 0}
+            emptyMessage="No hay cargas"
+          />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}>
