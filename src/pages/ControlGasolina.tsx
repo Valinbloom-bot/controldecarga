@@ -87,7 +87,10 @@ export default function ControlGasolina() {
             <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md">
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Nueva"} Gasolina</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
+                  <div><Label>Hora</Label><Input type="time" value={form.hora} onChange={e => setField("hora", e.target.value)} /></div>
+                </div>
                 <div><Label>Gasolinera</Label><Input value={form.gasolinera} onChange={e => setField("gasolinera", e.target.value)} placeholder="Nombre" /></div>
                 <div><Label>Ubicación</Label><Input value={form.ubicacion} onChange={e => setField("ubicacion", e.target.value)} placeholder="Ciudad, Estado" /></div>
                 <div className="grid grid-cols-2 gap-2">
@@ -136,7 +139,7 @@ export default function ControlGasolina() {
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-semibold text-sm">{g.gasolinera || "Gasolinera"}</div>
-                  <div className="text-xs text-muted-foreground">{g.fecha} · {g.ubicacion}</div>
+                  <div className="text-xs text-muted-foreground">{g.fecha}{g.hora ? ` · ${g.hora}` : ""} · {g.ubicacion}</div>
                   <div className="text-xs mt-1">{g.galones} gal × {formatMoney(g.precioPorGalon)}</div>
                   {g.cargaId && (
                     <div className="text-xs mt-1 flex items-center gap-1 text-primary">
