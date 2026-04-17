@@ -24,6 +24,7 @@ export default function DesgloseSermanal() {
     { label: "Comida", value: formatMoney(summary.gastoComida) },
     { label: "Hospedaje", value: formatMoney(summary.gastoHospedaje) },
     { label: "Peajes", value: formatMoney(summary.gastoPeajes) },
+    { label: "Vehículo", value: formatMoney(summary.gastoVehiculo) },
     { label: "Otros gastos", value: formatMoney(summary.otrosGastos) },
   ];
 

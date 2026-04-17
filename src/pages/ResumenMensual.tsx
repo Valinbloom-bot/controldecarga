@@ -83,6 +83,7 @@ export default function ResumenMensual() {
             ["Comida", summary.gastoComida],
             ["Hospedaje", summary.gastoHospedaje],
             ["Peajes", summary.gastoPeajes],
+            ["Vehículo", summary.gastoVehiculo],
             ["Otros", summary.otrosGastos],
           ].map(([l, v]) => (
             <div key={l as string} className="flex justify-between py-1 text-sm">
