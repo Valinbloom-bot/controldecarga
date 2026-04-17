@@ -17,7 +17,11 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 const emptyForm = {
+  fechaRecogida: format(new Date(), "yyyy-MM-dd"),
+  horaRecogida: format(new Date(), "HH:mm"),
   ubicacionRecogida: "",
+  fechaEntrega: format(new Date(), "yyyy-MM-dd"),
+  horaEntrega: "",
   ubicacionEntrega: "",
   millasTotal: 0,
   pagoRecibido: 0,
@@ -41,7 +45,11 @@ export default function RegistroCarga() {
     if (carga) {
       setEditing(carga);
       setForm({
+        fechaRecogida: carga.fechaRecogida,
+        horaRecogida: carga.horaRecogida,
         ubicacionRecogida: carga.ubicacionRecogida,
+        fechaEntrega: carga.fechaEntrega,
+        horaEntrega: carga.horaEntrega,
         ubicacionEntrega: carga.ubicacionEntrega,
         millasTotal: carga.millasTotal,
         pagoRecibido: carga.pagoRecibido,
@@ -67,6 +75,14 @@ export default function RegistroCarga() {
       toast.error("Completa recogida y entrega");
       return;
     }
+    if (!form.fechaRecogida || !form.horaRecogida) {
+      toast.error("Ingresa fecha y hora de recogida");
+      return;
+    }
+    if (!form.fechaEntrega || !form.horaEntrega) {
+      toast.error("Ingresa fecha y hora de entrega");
+      return;
+    }
     if (!form.millasTotal || form.millasTotal <= 0) {
       toast.error("Ingresa millas totales");
       return;
@@ -78,11 +94,11 @@ export default function RegistroCarga() {
 
     const today = format(new Date(), "yyyy-MM-dd");
     const payload = {
-      fechaRecogida: editing?.fechaRecogida || today,
-      horaRecogida: editing?.horaRecogida || format(new Date(), "HH:mm"),
+      fechaRecogida: form.fechaRecogida,
+      horaRecogida: form.horaRecogida,
       ubicacionRecogida: form.ubicacionRecogida,
-      fechaEntrega: editing?.fechaEntrega || today,
-      horaEntrega: editing?.horaEntrega || "",
+      fechaEntrega: form.fechaEntrega,
+      horaEntrega: form.horaEntrega,
       ubicacionEntrega: form.ubicacionEntrega,
       millasVacias: 0,
       millasCargadas: form.millasTotal,
@@ -166,6 +182,20 @@ export default function RegistroCarga() {
                     placeholder="Ciudad, Estado"
                     autoFocus
                   />
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Input
+                      className="h-12 text-base"
+                      type="date"
+                      value={form.fechaRecogida}
+                      onChange={e => setField("fechaRecogida", e.target.value)}
+                    />
+                    <Input
+                      className="h-12 text-base"
+                      type="time"
+                      value={form.horaRecogida}
+                      onChange={e => setField("horaRecogida", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -176,6 +206,20 @@ export default function RegistroCarga() {
                     onChange={e => setField("ubicacionEntrega", e.target.value)}
                     placeholder="Ciudad, Estado"
                   />
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Input
+                      className="h-12 text-base"
+                      type="date"
+                      value={form.fechaEntrega}
+                      onChange={e => setField("fechaEntrega", e.target.value)}
+                    />
+                    <Input
+                      className="h-12 text-base"
+                      type="time"
+                      value={form.horaEntrega}
+                      onChange={e => setField("horaEntrega", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
