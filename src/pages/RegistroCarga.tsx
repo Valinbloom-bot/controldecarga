@@ -75,6 +75,14 @@ export default function RegistroCarga() {
       toast.error("Completa recogida y entrega");
       return;
     }
+    if (!form.fechaRecogida || !form.horaRecogida) {
+      toast.error("Ingresa fecha y hora de recogida");
+      return;
+    }
+    if (!form.fechaEntrega || !form.horaEntrega) {
+      toast.error("Ingresa fecha y hora de entrega");
+      return;
+    }
     if (!form.millasTotal || form.millasTotal <= 0) {
       toast.error("Ingresa millas totales");
       return;
@@ -86,11 +94,11 @@ export default function RegistroCarga() {
 
     const today = format(new Date(), "yyyy-MM-dd");
     const payload = {
-      fechaRecogida: editing?.fechaRecogida || today,
-      horaRecogida: editing?.horaRecogida || format(new Date(), "HH:mm"),
+      fechaRecogida: form.fechaRecogida,
+      horaRecogida: form.horaRecogida,
       ubicacionRecogida: form.ubicacionRecogida,
-      fechaEntrega: editing?.fechaEntrega || today,
-      horaEntrega: editing?.horaEntrega || "",
+      fechaEntrega: form.fechaEntrega,
+      horaEntrega: form.horaEntrega,
       ubicacionEntrega: form.ubicacionEntrega,
       millasVacias: 0,
       millasCargadas: form.millasTotal,
