@@ -3,6 +3,8 @@ import { useAppData } from "@/context/AppContext";
 import { RegistroPeaje } from "@/types";
 import { formatMoney } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
+import { exportPeajesCSV, exportPeajesPDF } from "@/lib/exports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +46,13 @@ export default function ControlPeajes() {
       <PageHeader
         title="Control de Peajes"
         action={
+          <>
+          <ExportMenu
+            onCSV={() => exportPeajesCSV(data.peajes)}
+            onPDF={() => exportPeajesPDF(data.peajes)}
+            disabled={data.peajes.length === 0}
+            emptyMessage="No hay peajes"
+          />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> Nuevo</Button>
@@ -64,6 +73,7 @@ export default function ControlPeajes() {
               </div>
             </DialogContent>
           </Dialog>
+          </>
         }
       />
 

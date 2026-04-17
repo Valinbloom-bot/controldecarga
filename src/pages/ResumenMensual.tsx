@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAppData } from "@/context/AppContext";
 import { computeMonthlySummary, formatMoney, formatNumber } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
+import ExportMenu from "@/components/ExportMenu";
+import { exportResumenMensualCSV, exportResumenMensualPDF } from "@/lib/exports";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addMonths } from "date-fns";
@@ -17,7 +19,15 @@ export default function ResumenMensual() {
 
   return (
     <div className="pb-20">
-      <PageHeader title="Resumen General" />
+      <PageHeader
+        title="Resumen General"
+        action={
+          <ExportMenu
+            onCSV={() => exportResumenMensualCSV(data.cargas, data.gasolina, data.peajes, yearMonth)}
+            onPDF={() => exportResumenMensualPDF(data.cargas, data.gasolina, data.peajes, yearMonth)}
+          />
+        }
+      />
 
       <div className="flex items-center justify-between px-4 mb-4">
         <Button variant="outline" size="icon" onClick={() => setMonthOffset(o => o - 1)}><ChevronLeft className="w-4 h-4" /></Button>
