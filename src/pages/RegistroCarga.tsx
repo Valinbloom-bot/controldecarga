@@ -369,6 +369,7 @@ export default function RegistroCarga() {
           </>
         }
       />
+      <UsageBanner resource="cargas" />
 
       {sorted.length === 0 ? (
         <div className="text-center text-muted-foreground py-16 px-4">
