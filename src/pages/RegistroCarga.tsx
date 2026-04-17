@@ -45,7 +45,11 @@ export default function RegistroCarga() {
     if (carga) {
       setEditing(carga);
       setForm({
+        fechaRecogida: carga.fechaRecogida,
+        horaRecogida: carga.horaRecogida,
         ubicacionRecogida: carga.ubicacionRecogida,
+        fechaEntrega: carga.fechaEntrega,
+        horaEntrega: carga.horaEntrega,
         ubicacionEntrega: carga.ubicacionEntrega,
         millasTotal: carga.millasTotal,
         pagoRecibido: carga.pagoRecibido,
