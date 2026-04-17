@@ -119,6 +119,7 @@ export default function ControlGasolina() {
               </div>
             </DialogContent>
           </Dialog>
+          </>
         }
       />
 

@@ -73,6 +73,7 @@ export default function ControlPeajes() {
               </div>
             </DialogContent>
           </Dialog>
+          </>
         }
       />
 
