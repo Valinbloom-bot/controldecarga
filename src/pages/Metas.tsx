@@ -14,7 +14,7 @@ export default function DesgloseMes() {
   const monthDate = addMonths(new Date(), monthOffset);
   const yearMonth = format(monthDate, "yyyy-MM");
   const monthLabel = format(monthDate, "MMMM yyyy", { locale: es });
-  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth);
+  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth, data.gastosVehiculo);
 
   const chartData = useMemo(() => [
     { name: "Ingresos", value: summary.ingresosTotal },

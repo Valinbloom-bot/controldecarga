@@ -21,7 +21,7 @@ export default function ResumenMensual() {
   const monthDate = addMonths(new Date(), monthOffset);
   const yearMonth = format(monthDate, "yyyy-MM");
   const monthLabel = format(monthDate, "MMMM yyyy", { locale: es });
-  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth);
+  const summary = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, yearMonth, data.gastosVehiculo);
 
   return (
     <div className="pb-20">

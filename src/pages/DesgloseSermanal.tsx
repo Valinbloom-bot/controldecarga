@@ -11,7 +11,7 @@ export default function DesgloseSermanal() {
   const { data } = useAppData();
   const [weekOffset, setWeekOffset] = useState(0);
   const weekDate = addWeeks(new Date(), weekOffset);
-  const summary = computeWeeklySummary(data.cargas, data.gasolina, data.peajes, weekDate);
+  const summary = computeWeeklySummary(data.cargas, data.gasolina, data.peajes, weekDate, data.gastosVehiculo);
 
   const rows = [
     { label: "Total de cargas", value: summary.totalCargas.toString() },
