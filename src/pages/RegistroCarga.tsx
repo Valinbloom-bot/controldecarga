@@ -339,6 +339,16 @@ export default function RegistroCarga() {
                     <span className="text-muted-foreground">Ganancia/milla:</span>
                     <strong>{formatMoney(gananciaPorMilla)}</strong>
                   </div>
+                  <div className="flex justify-between border-t border-border pt-1 mt-1">
+                    <span className="text-muted-foreground">Duración del viaje:</span>
+                    <strong>{formatDuracion(duracionHoras)}</strong>
+                  </div>
+                  {duracionHoras > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ganancia/hora:</span>
+                      <strong>{formatMoney(gananciaPorHora)}</strong>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
