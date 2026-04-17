@@ -338,6 +338,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setData((d) => ({ ...d, peajes: d.peajes.filter((x) => x.id !== id) }));
   }, [user]);
 
+  // ---------- GASTOS VEHICULO ----------
+  const addGastoVehiculo = useCallback(async (g: Omit<GastoVehiculo, "id" | "createdAt">) => {
+    if (!user) return;
+    const { data: row, error } = await supabase
+      .from("gastos_vehiculo" as any)
+      .insert(gastoVehiculoToRow(g, user.id))
+      .select()
+      .single();
+    if (error || !row) return;
+    setData((d) => ({ ...d, gastosVehiculo: [rowToGastoVehiculo(row), ...d.gastosVehiculo] }));
+  }, [user]);
+
+  const updateGastoVehiculo = useCallback(async (g: GastoVehiculo) => {
+    if (!user) return;
+    const { error } = await supabase.from("gastos_vehiculo" as any).update(gastoVehiculoToRow(g, user.id)).eq("id", g.id);
+    if (error) return;
+    setData((d) => ({ ...d, gastosVehiculo: d.gastosVehiculo.map((x) => (x.id === g.id ? g : x)) }));
+  }, [user]);
+
+  const deleteGastoVehiculo = useCallback(async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("gastos_vehiculo" as any).delete().eq("id", id);
+    if (error) return;
+    setData((d) => ({ ...d, gastosVehiculo: d.gastosVehiculo.filter((x) => x.id !== id) }));
+  }, [user]);
+
   // ---------- METAS ----------
   const setMeta = useCallback(async (m: Omit<Meta, "id">) => {
     if (!user) return;
@@ -383,6 +409,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addPeaje,
         updatePeaje,
         deletePeaje,
+        addGastoVehiculo,
+        updateGastoVehiculo,
+        deleteGastoVehiculo,
         setMeta,
         toggleDarkMode,
       }}
