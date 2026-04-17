@@ -136,6 +136,42 @@ export type Database = {
           },
         ]
       }
+      gastos_vehiculo: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          descripcion: string | null
+          fecha: string | null
+          id: string
+          monto: number
+          notas: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          descripcion?: string | null
+          fecha?: string | null
+          id?: string
+          monto?: number
+          notas?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          descripcion?: string | null
+          fecha?: string | null
+          id?: string
+          monto?: number
+          notas?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       metas: {
         Row: {
           created_at: string
