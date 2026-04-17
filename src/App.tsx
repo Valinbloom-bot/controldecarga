@@ -20,6 +20,7 @@ import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
+
 const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
     <div className="max-w-lg mx-auto min-h-screen bg-background">
