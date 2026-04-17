@@ -5,12 +5,13 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Moon, Sun, FileText, FileSpreadsheet, Truck, Fuel, CreditCard, BarChart3 } from "lucide-react";
+import { Moon, Sun, FileText, FileSpreadsheet, Truck, Fuel, CreditCard, BarChart3, FileDown } from "lucide-react";
 import {
   exportCargasCSV, exportCargasPDF,
   exportGasolinaCSV, exportGasolinaPDF,
   exportPeajesCSV, exportPeajesPDF,
   exportResumenMensualCSV, exportResumenMensualPDF,
+  exportNegocioCompletoPDF,
 } from "@/lib/exports";
 import { format } from "date-fns";
 import { toast } from "sonner";
