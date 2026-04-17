@@ -28,7 +28,6 @@ const emptyForm = {
   costoGasolina: 0,
   peajes: 0,
   hospedaje: 0,
-  otrosGastos: 0,
   notas: "",
 };
 
@@ -56,11 +55,10 @@ export default function RegistroCarga() {
         costoGasolina: carga.costoGasolina,
         peajes: 0,
         hospedaje: carga.hospedaje,
-        otrosGastos: carga.otrosGastos,
         notas: carga.notas,
       });
       setOvernight(carga.hospedaje > 0);
-      setExtrasOpen(carga.costoGasolina > 0 || carga.otrosGastos > 0);
+      setExtrasOpen(carga.costoGasolina > 0);
     } else {
       setEditing(null);
       setForm(emptyForm);
@@ -106,7 +104,7 @@ export default function RegistroCarga() {
       costoGasolina: form.costoGasolina,
       gastosComida: 0,
       hospedaje: overnight ? form.hospedaje : 0,
-      otrosGastos: form.otrosGastos,
+      otrosGastos: 0,
       notas: form.notas,
     };
 
@@ -142,7 +140,7 @@ export default function RegistroCarga() {
   const linkedGasForEdit = editing ? getLinkedGas(editing.id) : [];
   const linkedGasCost = linkedGasForEdit.reduce((s, g) => s + g.totalGasolina, 0);
   const effectiveGasCost = linkedGasCost > 0 ? linkedGasCost : (form.costoGasolina || 0);
-  const totalGastos = effectiveGasCost + (form.peajes || 0) + (overnight ? (form.hospedaje || 0) : 0) + (form.otrosGastos || 0);
+  const totalGastos = effectiveGasCost + (form.peajes || 0) + (overnight ? (form.hospedaje || 0) : 0);
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
   const gananciaPorMilla = form.millasTotal > 0 ? gananciaNeta / form.millasTotal : 0;
 
@@ -318,10 +316,6 @@ export default function RegistroCarga() {
                         <p className="text-xs text-muted-foreground">Se registrará en Control de Peajes.</p>
                       </div>
                     )}
-                    <div className="space-y-1.5">
-                      <Label>Otros (parking, permisos, equipo) $</Label>
-                      <Input type="number" inputMode="decimal" value={form.otrosGastos || ""} onChange={e => numField("otrosGastos", e.target.value)} placeholder="0" />
-                    </div>
                   </CollapsibleContent>
                 </Collapsible>
 
