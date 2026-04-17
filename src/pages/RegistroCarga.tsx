@@ -146,6 +146,22 @@ export default function RegistroCarga() {
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
   const gananciaPorMilla = form.millasTotal > 0 ? gananciaNeta / form.millasTotal : 0;
 
+  // Trip duration in hours
+  const duracionHoras = (() => {
+    if (!form.fechaRecogida || !form.horaRecogida || !form.fechaEntrega || !form.horaEntrega) return 0;
+    const start = new Date(`${form.fechaRecogida}T${form.horaRecogida}`);
+    const end = new Date(`${form.fechaEntrega}T${form.horaEntrega}`);
+    const diff = (end.getTime() - start.getTime()) / 3600000;
+    return diff > 0 ? diff : 0;
+  })();
+  const formatDuracion = (h: number) => {
+    if (h <= 0) return "—";
+    const horas = Math.floor(h);
+    const mins = Math.round((h - horas) * 60);
+    return mins > 0 ? `${horas}h ${mins}m` : `${horas}h`;
+  };
+  const gananciaPorHora = duracionHoras > 0 ? gananciaNeta / duracionHoras : 0;
+
   const sorted = [...data.cargas].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
