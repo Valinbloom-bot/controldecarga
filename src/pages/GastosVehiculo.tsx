@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useUsageGate } from "@/hooks/useUsageGate";
+import UsageBanner from "@/components/UsageBanner";
 
 const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),

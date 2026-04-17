@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUsageGate } from "@/hooks/useUsageGate";
+import UsageBanner from "@/components/UsageBanner";
+import { toast } from "sonner";
 import { useAppData } from "@/context/AppContext";
 import { RegistroPeaje } from "@/types";
 import { formatMoney } from "@/lib/calculations";
