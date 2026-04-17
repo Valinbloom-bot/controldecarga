@@ -5,12 +5,13 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Moon, Sun, FileText, FileSpreadsheet, Truck, Fuel, CreditCard, BarChart3 } from "lucide-react";
+import { Moon, Sun, FileText, FileSpreadsheet, Truck, Fuel, CreditCard, BarChart3, FileDown } from "lucide-react";
 import {
   exportCargasCSV, exportCargasPDF,
   exportGasolinaCSV, exportGasolinaPDF,
   exportPeajesCSV, exportPeajesPDF,
   exportResumenMensualCSV, exportResumenMensualPDF,
+  exportNegocioCompletoPDF,
 } from "@/lib/exports";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -126,6 +127,33 @@ export default function Configuracion() {
                 <FileText className="w-4 h-4 mr-1" /> PDF
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Full business export */}
+        <div>
+          <h2 className="text-sm font-semibold mb-2 px-1">Reporte completo</h2>
+          <div className="bg-card border border-border rounded-lg p-3 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                <FileDown className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm">Todo el negocio en un PDF</div>
+                <div className="text-xs text-muted-foreground">Resumen + cargas + gasolina + peajes</div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={safe(
+                () => exportNegocioCompletoPDF(data.cargas, data.gasolina, data.peajes, mes || undefined),
+                "No hay datos",
+                data.cargas.length === 0 && data.gasolina.length === 0 && data.peajes.length === 0,
+              )}
+            >
+              <FileDown className="w-4 h-4 mr-1" /> Exportar PDF completo
+            </Button>
           </div>
         </div>
 
