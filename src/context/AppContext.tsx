@@ -83,6 +83,7 @@ function rowToGas(r: any): RegistroGasolina {
   return {
     id: r.id,
     fecha: r.fecha ?? "",
+    hora: r.hora ?? "",
     gasolinera: r.gasolinera ?? "",
     ubicacion: r.ubicacion ?? "",
     galones,
@@ -102,6 +103,7 @@ function gasToRow(g: Partial<RegistroGasolina>, userId: string) {
     user_id: userId,
     carga_id: g.cargaId ?? null,
     fecha: g.fecha,
+    hora: g.hora ?? null,
     gasolinera: g.gasolinera,
     ubicacion: g.ubicacion,
     galones: g.galones ?? 0,

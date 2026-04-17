@@ -13,8 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Link2 } from "lucide-react";
 import { format } from "date-fns";
 
-const emptyForm = {
+const nowTime = () => format(new Date(), "HH:mm");
+
+const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),
+  hora: nowTime(),
   gasolinera: "",
   ubicacion: "",
   galones: 0,

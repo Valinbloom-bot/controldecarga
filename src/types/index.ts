@@ -25,6 +25,7 @@ export interface Carga {
 export interface RegistroGasolina {
   id: string;
   fecha: string;
+  hora: string;
   gasolinera: string;
   ubicacion: string;
   galones: number;
