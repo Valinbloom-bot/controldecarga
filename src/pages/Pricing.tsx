@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { loadStripe } from "@stripe/stripe-js";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
@@ -8,36 +7,22 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { getStripe, PAYMENTS_ENV } from "@/lib/stripe";
 import PageHeader from "@/components/PageHeader";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Loader2, Sparkles, ExternalLink } from "lucide-react";
+import { Check, Loader2, Sparkles, ExternalLink, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-const stripePromise = loadStripe(import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string);
-
 const PLANS = [
-  {
-    priceId: "pro_monthly",
-    name: "Mensual",
-    price: "$4.99",
-    period: "/mes",
-    badge: null as string | null,
-  },
-  {
-    priceId: "pro_yearly",
-    name: "Anual",
-    price: "$39.99",
-    period: "/año",
-    badge: "Ahorra 33%",
-  },
+  { priceId: "pro_monthly", name: "Mensual", price: "$4.99", period: "/mes", badge: null as string | null },
+  { priceId: "pro_yearly",  name: "Anual",   price: "$39.99", period: "/año", badge: "Ahorra 33%" },
 ];
 
 const FEATURES = [
-  "Registro ilimitado de cargas",
-  "Control de gasolina y peajes",
-  "Gastos del vehículo",
-  "Reportes semanales y mensuales",
+  "Cargas, gasolina, peajes y gastos sin límite",
+  "Reportes semanales y mensuales completos",
   "Metas y desglose por mes",
   "Exportar a CSV y PDF",
 ];
@@ -45,27 +30,33 @@ const FEATURES = [
 export default function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isActive, subscription, loading: loadingSub } = useSubscription();
+  const [params, setParams] = useSearchParams();
+  const { isActive, isTrialing, subscription, loading: loadingSub, refetch } = useSubscription();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
 
+  // Handle return from Stripe Checkout
   useEffect(() => {
-    return () => setClientSecret(null);
-  }, []);
+    if (params.get("success") === "1") {
+      toast.success("¡Suscripción iniciada! Tu prueba de 7 días está activa.");
+      const t = setInterval(refetch, 1500);
+      const stop = setTimeout(() => clearInterval(t), 12000);
+      params.delete("success");
+      setParams(params, { replace: true });
+      return () => { clearInterval(t); clearTimeout(stop); };
+    }
+  }, [params, setParams, refetch]);
 
   const handleSubscribe = async (priceId: string) => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
+    if (!user) { navigate("/auth"); return; }
     setBusyPriceId(priceId);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
           priceId,
           returnUrl: `${window.location.origin}/precios?success=1`,
-          environment: "sandbox",
+          environment: PAYMENTS_ENV,
         },
       });
       if (error) throw error;
@@ -82,10 +73,7 @@ export default function Pricing() {
     setOpeningPortal(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-portal-session", {
-        body: {
-          returnUrl: `${window.location.origin}/precios`,
-          environment: "sandbox",
-        },
+        body: { returnUrl: `${window.location.origin}/precios`, environment: PAYMENTS_ENV },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
@@ -99,15 +87,13 @@ export default function Pricing() {
   if (clientSecret) {
     return (
       <div className="pb-20">
+        <PaymentTestModeBanner />
         <PageHeader title="Pago" />
         <div className="px-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Modo de prueba — usa la tarjeta 4242 4242 4242 4242</p>
-            <Button size="sm" variant="ghost" onClick={() => setClientSecret(null)}>
-              Cancelar
-            </Button>
+          <div className="mb-3 flex items-center justify-end">
+            <Button size="sm" variant="ghost" onClick={() => setClientSecret(null)}>Cancelar</Button>
           </div>
-          <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
+          <EmbeddedCheckoutProvider stripe={getStripe()} options={{ clientSecret }}>
             <EmbeddedCheckout />
           </EmbeddedCheckoutProvider>
         </div>
@@ -117,6 +103,7 @@ export default function Pricing() {
 
   return (
     <div className="pb-20">
+      <PaymentTestModeBanner />
       <PageHeader title="Plan Pro" />
       <div className="px-4 space-y-4">
         <div className="text-center pt-2">
@@ -124,21 +111,23 @@ export default function Pricing() {
             <Sparkles className="w-3.5 h-3.5" /> 7 días gratis
           </div>
           <h2 className="text-2xl font-bold">Lleva el control completo</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Cancela cuando quieras durante la prueba.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Cancela cuando quieras durante la prueba.</p>
         </div>
 
         {isActive && subscription && (
           <Card className="p-4 border-primary/40 bg-primary/5">
-            <div className="font-semibold text-sm mb-1">
-              {subscription.status === "trialing" ? "En período de prueba" : "Suscripción activa"}
+            <div className="flex items-start gap-2 mb-1">
+              <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+              <div className="font-semibold text-sm">
+                {isTrialing ? "Período de prueba activo" : "Suscripción activa"}
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground mb-3">
+            <div className="text-xs text-muted-foreground mb-3 pl-6">
               Plan: {subscription.price_id === "pro_yearly" ? "Anual" : "Mensual"}
               {subscription.current_period_end && (
-                <> · Renueva el {new Date(subscription.current_period_end).toLocaleDateString("es-ES")}</>
+                <> · {isTrialing ? "Primer cobro" : "Renueva"} el {new Date(subscription.current_period_end).toLocaleDateString("es-ES")}</>
               )}
+              {subscription.cancel_at_period_end && <> · Cancelación programada</>}
             </div>
             <Button size="sm" variant="outline" className="w-full" onClick={handleManage} disabled={openingPortal}>
               {openingPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}

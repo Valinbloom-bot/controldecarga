@@ -15,6 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Fuel, Moon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useUsageGate } from "@/hooks/useUsageGate";
+import UsageBanner from "@/components/UsageBanner";
 
 const emptyForm = {
   fechaRecogida: format(new Date(), "yyyy-MM-dd"),
@@ -33,6 +36,8 @@ const emptyForm = {
 
 export default function RegistroCarga() {
   const { data, addCarga, updateCarga, deleteCarga, addPeaje } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("cargas");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Carga | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -41,6 +46,11 @@ export default function RegistroCarga() {
   const [extrasOpen, setExtrasOpen] = useState(false);
 
   const handleOpen = (carga?: Carga) => {
+    if (!carga && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (carga) {
       setEditing(carga);
       setForm({
@@ -359,6 +369,7 @@ export default function RegistroCarga() {
           </>
         }
       />
+      <UsageBanner resource="cargas" />
 
       {sorted.length === 0 ? (
         <div className="text-center text-muted-foreground py-16 px-4">

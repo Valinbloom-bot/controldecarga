@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUsageGate } from "@/hooks/useUsageGate";
+import UsageBanner from "@/components/UsageBanner";
+import { toast } from "sonner";
 import { useAppData } from "@/context/AppContext";
 import { RegistroPeaje } from "@/types";
 import { formatMoney } from "@/lib/calculations";
@@ -22,11 +26,18 @@ const emptyForm = {
 
 export default function ControlPeajes() {
   const { data, addPeaje, updatePeaje, deletePeaje } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("peajes");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroPeaje | null>(null);
   const [form, setForm] = useState(emptyForm);
 
   const handleOpen = (p?: RegistroPeaje) => {
+    if (!p && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (p) { setEditing(p); setForm({ fecha: p.fecha, ubicacionCarretera: p.ubicacionCarretera, monto: p.monto, metodoPago: p.metodoPago, notas: p.notas }); }
     else { setEditing(null); setForm(emptyForm); }
     setOpen(true);
@@ -77,6 +88,7 @@ export default function ControlPeajes() {
           </>
         }
       />
+      <UsageBanner resource="peajes" />
 
       <div className="px-4 mb-4">
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">

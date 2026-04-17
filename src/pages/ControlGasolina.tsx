@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUsageGate } from "@/hooks/useUsageGate";
+import UsageBanner from "@/components/UsageBanner";
+import { toast } from "sonner";
 import { useAppData } from "@/context/AppContext";
 import { RegistroGasolina } from "@/types";
 import { formatMoney } from "@/lib/calculations";
@@ -30,11 +34,18 @@ const buildEmptyForm = () => ({
 
 export default function ControlGasolina() {
   const { data, addGasolina, updateGasolina, deleteGasolina } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("gasolina");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroGasolina | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
 
   const handleOpen = (g?: RegistroGasolina) => {
+    if (!g && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (g) {
       setEditing(g);
       setForm({ fecha: g.fecha, hora: g.hora || nowTime(), gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
@@ -129,6 +140,7 @@ export default function ControlGasolina() {
           </>
         }
       />
+      <UsageBanner resource="gasolina" />
 
       {sorted.length === 0 ? (
         <div className="text-center text-muted-foreground py-16"><p>Sin registros de gasolina</p></div>

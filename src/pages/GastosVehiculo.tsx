@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useUsageGate } from "@/hooks/useUsageGate";
+import UsageBanner from "@/components/UsageBanner";
 
 const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),
@@ -23,11 +26,18 @@ const buildEmptyForm = () => ({
 
 export default function GastosVehiculo() {
   const { data, addGastoVehiculo, updateGastoVehiculo, deleteGastoVehiculo } = useAppData();
+  const navigate = useNavigate();
+  const { blocked } = useUsageGate("gastosVehiculo");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<GastoVehiculo | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
 
   const handleOpen = (g?: GastoVehiculo) => {
+    if (!g && blocked) {
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      navigate("/precios");
+      return;
+    }
     if (g) {
       setEditing(g);
       setForm({
@@ -133,6 +143,7 @@ export default function GastosVehiculo() {
           </Dialog>
         }
       />
+      <UsageBanner resource="gastosVehiculo" />
 
       <div className="px-4 mb-3">
         <div className="bg-card border border-border rounded-lg p-3 flex items-center justify-between">
