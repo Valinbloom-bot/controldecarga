@@ -32,15 +32,15 @@ export default function ControlGasolina() {
   const { data, addGasolina, updateGasolina, deleteGasolina } = useAppData();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroGasolina | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(buildEmptyForm);
 
   const handleOpen = (g?: RegistroGasolina) => {
     if (g) {
       setEditing(g);
-      setForm({ fecha: g.fecha, gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
+      setForm({ fecha: g.fecha, hora: g.hora || nowTime(), gasolinera: g.gasolinera, ubicacion: g.ubicacion, galones: g.galones, precioPorGalon: g.precioPorGalon, snackComida: g.snackComida, metodoPago: g.metodoPago, notas: g.notas, cargaId: g.cargaId || "" });
     } else {
       setEditing(null);
-      setForm(emptyForm);
+      setForm(buildEmptyForm());
     }
     setOpen(true);
   };
