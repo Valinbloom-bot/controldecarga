@@ -182,6 +182,20 @@ export default function RegistroCarga() {
                     placeholder="Ciudad, Estado"
                     autoFocus
                   />
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Input
+                      className="h-12 text-base"
+                      type="date"
+                      value={form.fechaRecogida}
+                      onChange={e => setField("fechaRecogida", e.target.value)}
+                    />
+                    <Input
+                      className="h-12 text-base"
+                      type="time"
+                      value={form.horaRecogida}
+                      onChange={e => setField("horaRecogida", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -192,6 +206,20 @@ export default function RegistroCarga() {
                     onChange={e => setField("ubicacionEntrega", e.target.value)}
                     placeholder="Ciudad, Estado"
                   />
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Input
+                      className="h-12 text-base"
+                      type="date"
+                      value={form.fechaEntrega}
+                      onChange={e => setField("fechaEntrega", e.target.value)}
+                    />
+                    <Input
+                      className="h-12 text-base"
+                      type="time"
+                      value={form.horaEntrega}
+                      onChange={e => setField("horaEntrega", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
