@@ -14,7 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cargas: {
+        Row: {
+          costo_gasolina: number
+          created_at: string
+          fecha_entrega: string | null
+          fecha_recogida: string | null
+          gastos_comida: number
+          hora_entrega: string | null
+          hora_recogida: string | null
+          hospedaje: number
+          id: string
+          millas_cargadas: number
+          millas_vacias: number
+          notas: string | null
+          otros_gastos: number
+          pago_recibido: number
+          ubicacion_entrega: string | null
+          ubicacion_recogida: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          costo_gasolina?: number
+          created_at?: string
+          fecha_entrega?: string | null
+          fecha_recogida?: string | null
+          gastos_comida?: number
+          hora_entrega?: string | null
+          hora_recogida?: string | null
+          hospedaje?: number
+          id?: string
+          millas_cargadas?: number
+          millas_vacias?: number
+          notas?: string | null
+          otros_gastos?: number
+          pago_recibido?: number
+          ubicacion_entrega?: string | null
+          ubicacion_recogida?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          costo_gasolina?: number
+          created_at?: string
+          fecha_entrega?: string | null
+          fecha_recogida?: string | null
+          gastos_comida?: number
+          hora_entrega?: string | null
+          hora_recogida?: string | null
+          hospedaje?: number
+          id?: string
+          millas_cargadas?: number
+          millas_vacias?: number
+          notas?: string | null
+          otros_gastos?: number
+          pago_recibido?: number
+          ubicacion_entrega?: string | null
+          ubicacion_recogida?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gasolina: {
+        Row: {
+          carga_id: string | null
+          created_at: string
+          fecha: string | null
+          galones: number
+          gasolinera: string | null
+          id: string
+          metodo_pago: string | null
+          notas: string | null
+          precio_por_galon: number
+          snack_comida: number
+          ubicacion: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carga_id?: string | null
+          created_at?: string
+          fecha?: string | null
+          galones?: number
+          gasolinera?: string | null
+          id?: string
+          metodo_pago?: string | null
+          notas?: string | null
+          precio_por_galon?: number
+          snack_comida?: number
+          ubicacion?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carga_id?: string | null
+          created_at?: string
+          fecha?: string | null
+          galones?: number
+          gasolinera?: string | null
+          id?: string
+          metodo_pago?: string | null
+          notas?: string | null
+          precio_por_galon?: number
+          snack_comida?: number
+          ubicacion?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gasolina_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas: {
+        Row: {
+          created_at: string
+          id: string
+          mes: string
+          meta_cargas: number
+          meta_ganancia_neta: number
+          meta_ingreso: number
+          meta_millas: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mes: string
+          meta_cargas?: number
+          meta_ganancia_neta?: number
+          meta_ingreso?: number
+          meta_millas?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mes?: string
+          meta_cargas?: number
+          meta_ganancia_neta?: number
+          meta_ingreso?: number
+          meta_millas?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      peajes: {
+        Row: {
+          created_at: string
+          fecha: string | null
+          id: string
+          metodo_pago: string | null
+          monto: number
+          notas: string | null
+          ubicacion_carretera: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fecha?: string | null
+          id?: string
+          metodo_pago?: string | null
+          monto?: number
+          notas?: string | null
+          ubicacion_carretera?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fecha?: string | null
+          id?: string
+          metodo_pago?: string | null
+          monto?: number
+          notas?: string | null
+          ubicacion_carretera?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
