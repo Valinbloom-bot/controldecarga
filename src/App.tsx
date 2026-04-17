@@ -4,7 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/context/AppContext";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomNav from "@/components/BottomNav";
+import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import RegistroCarga from "@/pages/RegistroCarga";
 import ControlGasolina from "@/pages/ControlGasolina";
@@ -17,30 +20,39 @@ import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <div className="max-w-lg mx-auto min-h-screen bg-background">
+      {children}
+      <BottomNav />
+    </div>
+  </ProtectedRoute>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AppProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="max-w-lg mx-auto min-h-screen bg-background">
+    <BrowserRouter>
+      <AuthProvider>
+        <AppProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/cargas" element={<RegistroCarga />} />
-              <Route path="/gasolina" element={<ControlGasolina />} />
-              <Route path="/peajes" element={<ControlPeajes />} />
-              <Route path="/semanal" element={<DesgloseSermanal />} />
-              <Route path="/resumen" element={<ResumenMensual />} />
-              <Route path="/metas" element={<DesgloseMes />} />
-              <Route path="/configuracion" element={<Configuracion />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<ProtectedShell><Dashboard /></ProtectedShell>} />
+              <Route path="/cargas" element={<ProtectedShell><RegistroCarga /></ProtectedShell>} />
+              <Route path="/gasolina" element={<ProtectedShell><ControlGasolina /></ProtectedShell>} />
+              <Route path="/peajes" element={<ProtectedShell><ControlPeajes /></ProtectedShell>} />
+              <Route path="/semanal" element={<ProtectedShell><DesgloseSermanal /></ProtectedShell>} />
+              <Route path="/resumen" element={<ProtectedShell><ResumenMensual /></ProtectedShell>} />
+              <Route path="/metas" element={<ProtectedShell><DesgloseMes /></ProtectedShell>} />
+              <Route path="/configuracion" element={<ProtectedShell><Configuracion /></ProtectedShell>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <BottomNav />
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AppProvider>
+          </TooltipProvider>
+        </AppProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
