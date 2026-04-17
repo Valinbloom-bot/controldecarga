@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { AppData, Carga, RegistroGasolina, RegistroPeaje, Meta, defaultAppData } from "@/types";
+import { AppData, Carga, RegistroGasolina, RegistroPeaje, GastoVehiculo, Meta, defaultAppData } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,6 +15,9 @@ interface AppContextType {
   addPeaje: (p: Omit<RegistroPeaje, "id" | "createdAt">) => Promise<void>;
   updatePeaje: (p: RegistroPeaje) => Promise<void>;
   deletePeaje: (id: string) => Promise<void>;
+  addGastoVehiculo: (g: Omit<GastoVehiculo, "id" | "createdAt">) => Promise<void>;
+  updateGastoVehiculo: (g: GastoVehiculo) => Promise<void>;
+  deleteGastoVehiculo: (id: string) => Promise<void>;
   setMeta: (m: Omit<Meta, "id">) => Promise<void>;
   toggleDarkMode: () => void;
 }
@@ -134,6 +137,29 @@ function peajeToRow(p: Partial<RegistroPeaje>, userId: string) {
     monto: p.monto ?? 0,
     metodo_pago: p.metodoPago,
     notas: p.notas ?? "",
+  };
+}
+
+function rowToGastoVehiculo(r: any): GastoVehiculo {
+  return {
+    id: r.id,
+    fecha: r.fecha ?? "",
+    categoria: r.categoria ?? "",
+    descripcion: r.descripcion ?? "",
+    monto: Number(r.monto) || 0,
+    notas: r.notas ?? "",
+    createdAt: r.created_at,
+  };
+}
+
+function gastoVehiculoToRow(g: Partial<GastoVehiculo>, userId: string) {
+  return {
+    user_id: userId,
+    fecha: g.fecha,
+    categoria: g.categoria,
+    descripcion: g.descripcion,
+    monto: g.monto ?? 0,
+    notas: g.notas ?? "",
   };
 }
 
