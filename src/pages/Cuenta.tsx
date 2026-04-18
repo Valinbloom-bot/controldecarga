@@ -41,6 +41,7 @@ export default function Cuenta() {
   const { user, displayName, signOut } = useAuth();
   const { subscription, isActive, isTrialing, loading } = useSubscription();
   const [opening, setOpening] = useState<string | null>(null);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const openPortal = async (action: "manage" | "card" | "cancel" | "switch") => {
     setOpening(action);
@@ -183,7 +184,7 @@ export default function Cuenta() {
 
               <Card className="p-3">
                 <button
-                  onClick={() => openPortal("cancel")}
+                  onClick={() => setConfirmCancelOpen(true)}
                   disabled={opening !== null}
                   className="w-full flex items-center gap-3 text-left disabled:opacity-50"
                 >
