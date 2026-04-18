@@ -7,6 +7,7 @@ import { AppProvider } from "@/context/AppContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomNav from "@/components/BottomNav";
+import { PaymentFailedBanner } from "@/components/PaymentFailedBanner";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
@@ -28,6 +29,7 @@ const queryClient = new QueryClient();
 const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
     <div className="max-w-lg mx-auto min-h-screen bg-background">
+      <PaymentFailedBanner />
       {children}
       <BottomNav />
     </div>
