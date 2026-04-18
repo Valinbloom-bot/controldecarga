@@ -244,6 +244,31 @@ export default function Cuenta() {
           </button>
         </Card>
       </div>
+
+      <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cancelar suscripción?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se abrirá el portal seguro de pagos en una nueva pestaña para confirmar la cancelación.
+              Mantendrás acceso a la app hasta el fin del período actual
+              {periodEnd ? ` (${periodEnd.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })})` : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Volver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmCancelOpen(false);
+                openPortal("cancel");
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Continuar al portal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
