@@ -17,6 +17,7 @@ import DesgloseSermanal from "@/pages/DesgloseSermanal";
 import ResumenMensual from "@/pages/ResumenMensual";
 import DesgloseMes from "@/pages/Metas";
 import Configuracion from "@/pages/Configuracion";
+import Cuenta from "@/pages/Cuenta";
 import Pricing from "@/pages/Pricing";
 import NotFound from "@/pages/NotFound";
 
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/resumen" element={<ProtectedShell><ResumenMensual /></ProtectedShell>} />
               <Route path="/metas" element={<ProtectedShell><DesgloseMes /></ProtectedShell>} />
               <Route path="/configuracion" element={<ProtectedShell><Configuracion /></ProtectedShell>} />
+              <Route path="/cuenta" element={<ProtectedShell><Cuenta /></ProtectedShell>} />
               <Route path="/precios" element={<ProtectedShell><Pricing /></ProtectedShell>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
