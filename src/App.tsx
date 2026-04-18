@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomNav from "@/components/BottomNav";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
 import RegistroCarga from "@/pages/RegistroCarga";
 import ControlGasolina from "@/pages/ControlGasolina";
@@ -43,6 +44,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedShell><Dashboard /></ProtectedShell>} />
               <Route path="/cargas" element={<ProtectedShell><RegistroCarga /></ProtectedShell>} />
               <Route path="/gasolina" element={<ProtectedShell><ControlGasolina /></ProtectedShell>} />
