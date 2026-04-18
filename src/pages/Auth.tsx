@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Truck, Loader2 } from "lucide-react";
+import { Truck, Loader2, CheckCircle2 } from "lucide-react";
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(100),
