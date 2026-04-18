@@ -68,6 +68,9 @@ export default function Cuenta() {
   const periodEnd = subscription?.current_period_end
     ? new Date(subscription.current_period_end)
     : null;
+  const paymentFailed = subscription
+    ? ["past_due", "unpaid", "incomplete"].includes(subscription.status)
+    : false;
 
   return (
     <div className="pb-20">
@@ -89,6 +92,41 @@ export default function Cuenta() {
           <Card className="p-6 flex justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
           </Card>
+        ) : paymentFailed && subscription ? (
+          <>
+            <Card className="p-4 border-destructive/40 bg-destructive/5">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-destructive">
+                    {subscription.status === "unpaid"
+                      ? "Suscripción suspendida"
+                      : "No pudimos cobrar tu tarjeta"}
+                  </div>
+                  <div className="text-xs text-foreground/80 mt-1">
+                    {subscription.status === "unpaid"
+                      ? "Después de varios intentos no se pudo procesar el cobro. Actualiza tu tarjeta para reactivar tu acceso."
+                      : subscription.status === "incomplete"
+                      ? "Tu tarjeta fue rechazada al iniciar la suscripción. Actualiza tu método de pago para activar tu plan."
+                      : "Tu último pago fue rechazado. Actualiza tu tarjeta para mantener tu acceso a la app."}
+                  </div>
+                  <Button
+                    size="sm"
+                    className="mt-3 w-full"
+                    onClick={() => openPortal("card")}
+                    disabled={opening !== null}
+                  >
+                    {opening === "card" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CreditCard className="w-4 h-4" />
+                    )}
+                    Actualizar tarjeta
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </>
         ) : isActive && subscription ? (
           <>
             <Card className="p-4 border-primary/40 bg-primary/5">

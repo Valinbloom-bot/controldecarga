@@ -63,7 +63,14 @@ export default function Pricing() {
       if (!data?.clientSecret) throw new Error("No client secret returned");
       setClientSecret(data.clientSecret);
     } catch (e: any) {
-      toast.error(e?.message || "No se pudo iniciar el pago");
+      const raw = (e?.message || "").toLowerCase();
+      let friendly = "No pudimos iniciar el pago. Intenta de nuevo en unos momentos.";
+      if (raw.includes("declin") || raw.includes("card")) {
+        friendly = "Tu tarjeta fue rechazada. Revisa los datos o usa otra tarjeta.";
+      } else if (raw.includes("network") || raw.includes("fetch")) {
+        friendly = "Problema de conexión. Verifica tu internet e intenta de nuevo.";
+      }
+      toast.error(friendly);
     } finally {
       setBusyPriceId(null);
     }
