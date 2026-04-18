@@ -47,6 +47,24 @@ export default function Auth() {
     e.preventDefault();
     setBusy(true);
     try {
+      if (mode === "forgot") {
+        const parsed = resetSchema.safeParse({ email });
+        if (!parsed.success) {
+          toast.error(parsed.error.errors[0].message);
+          return;
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        setResetSent(true);
+        toast.success("Te enviamos un correo con el enlace de recuperación");
+        return;
+      }
+
       if (mode === "signup") {
         const parsed = signUpSchema.safeParse({ name, email, password });
         if (!parsed.success) {
