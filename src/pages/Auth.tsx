@@ -22,14 +22,19 @@ const signInSchema = z.object({
   password: z.string().min(1, "Contraseña obligatoria"),
 });
 
+const resetSchema = z.object({
+  email: z.string().trim().email("Correo inválido").max(255),
+});
+
 export default function Auth() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (user) navigate("/", { replace: true });
