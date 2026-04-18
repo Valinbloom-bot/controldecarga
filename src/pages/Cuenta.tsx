@@ -8,6 +8,16 @@ import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   CreditCard,
   Calendar,
   ExternalLink,
@@ -31,6 +41,7 @@ export default function Cuenta() {
   const { user, displayName, signOut } = useAuth();
   const { subscription, isActive, isTrialing, loading } = useSubscription();
   const [opening, setOpening] = useState<string | null>(null);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const openPortal = async (action: "manage" | "card" | "cancel" | "switch") => {
     setOpening(action);
@@ -173,7 +184,7 @@ export default function Cuenta() {
 
               <Card className="p-3">
                 <button
-                  onClick={() => openPortal("cancel")}
+                  onClick={() => setConfirmCancelOpen(true)}
                   disabled={opening !== null}
                   className="w-full flex items-center gap-3 text-left disabled:opacity-50"
                 >
@@ -233,6 +244,31 @@ export default function Cuenta() {
           </button>
         </Card>
       </div>
+
+      <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cancelar suscripción?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se abrirá el portal seguro de pagos en una nueva pestaña para confirmar la cancelación.
+              Mantendrás acceso a la app hasta el fin del período actual
+              {periodEnd ? ` (${periodEnd.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })})` : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Volver</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmCancelOpen(false);
+                openPortal("cancel");
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Continuar al portal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
