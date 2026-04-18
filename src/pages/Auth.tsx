@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Truck, Loader2, CheckCircle2 } from "lucide-react";
+import { Truck, Loader2, CheckCircle2, Mail } from "lucide-react";
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(100),
@@ -136,6 +136,25 @@ export default function Auth() {
     }
   };
 
+  const handleResendConfirmation = async () => {
+    if (!signupEmail) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: signupEmail,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Correo de confirmación reenviado");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <div className="w-full max-w-md">
@@ -148,7 +167,45 @@ export default function Auth() {
         </div>
 
         <Card className="p-6">
-          {mode === "forgot" ? (
+          {signupSent ? (
+            <div className="text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Confirma tu correo</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Te enviamos un enlace de confirmación a{" "}
+                  <span className="font-semibold text-foreground">{signupEmail}</span>.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Haz clic en el enlace para activar tu cuenta y empezar tu prueba gratis de 7 días.
+                  Revisa tu carpeta de spam si no lo ves.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleResendConfirmation}
+                  disabled={busy}
+                >
+                  {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Reenviar correo
+                </Button>
+                <button
+                  type="button"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                  onClick={() => {
+                    setSignupSent(false);
+                    setMode("signin");
+                  }}
+                >
+                  Volver al inicio de sesión
+                </button>
+              </div>
+            </div>
+          ) : mode === "forgot" ? (
             <div className="space-y-4">
               <div>
                 <h2 className="font-bold text-lg">Recuperar contraseña</h2>
