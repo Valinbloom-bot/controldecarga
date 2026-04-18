@@ -4,7 +4,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2 } from "lucide-react";
 
 // Routes a logged-in user without an active subscription/trial may still visit
-const SUB_EXEMPT_ROUTES = ["/precios", "/configuracion"];
+const SUB_EXEMPT_ROUTES = ["/precios", "/configuracion", "/cuenta"];
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
