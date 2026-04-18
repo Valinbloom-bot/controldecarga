@@ -35,6 +35,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
 
   useEffect(() => {
     if (user) navigate("/", { replace: true });
@@ -71,7 +73,7 @@ export default function Auth() {
           toast.error(parsed.error.errors[0].message);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
@@ -85,6 +87,13 @@ export default function Auth() {
           } else {
             toast.error(error.message);
           }
+          return;
+        }
+        // If email confirmation is required, no session is returned.
+        if (!data.session) {
+          setSignupEmail(parsed.data.email);
+          setSignupSent(true);
+          setPassword("");
           return;
         }
         toast.success("¡Cuenta creada! Bienvenido.");
