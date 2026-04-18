@@ -108,7 +108,14 @@ export default function Auth() {
           password: parsed.data.password,
         });
         if (error) {
-          toast.error(error.message.includes("Invalid") ? "Correo o contraseña incorrectos" : error.message);
+          const msg = error.message.toLowerCase();
+          if (msg.includes("not confirmed") || msg.includes("email not confirmed")) {
+            setSignupEmail(parsed.data.email);
+            setSignupSent(true);
+            toast.error("Confirma tu correo antes de iniciar sesión");
+          } else {
+            toast.error(error.message.includes("Invalid") ? "Correo o contraseña incorrectos" : error.message);
+          }
           return;
         }
       }
