@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAppData } from "@/context/AppContext";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccessStatus } from "@/hooks/useAccessStatus";
 
 export const FREE_TIER_LIMIT = 5;
 
@@ -15,11 +15,11 @@ const LABELS: Record<Resource, { singular: string; plural: string }> = {
 
 export function useUsageGate(resource: Resource) {
   const { data } = useAppData();
-  const { isActive, loading } = useSubscription();
+  const { hasFullAccess, loading } = useAccessStatus();
 
   const count = useMemo(() => (data[resource] as unknown[])?.length ?? 0, [data, resource]);
   const remaining = Math.max(0, FREE_TIER_LIMIT - count);
-  const blocked = !isActive && count >= FREE_TIER_LIMIT;
+  const blocked = !hasFullAccess && count >= FREE_TIER_LIMIT;
 
   return {
     count,
@@ -27,7 +27,7 @@ export function useUsageGate(resource: Resource) {
     remaining,
     blocked,
     loading,
-    isActive,
+    isActive: hasFullAccess,
     label: LABELS[resource],
   };
 }

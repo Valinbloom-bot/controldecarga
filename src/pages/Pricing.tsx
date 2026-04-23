@@ -6,13 +6,13 @@ import {
 } from "@stripe/react-stripe-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccessStatus } from "@/hooks/useAccessStatus";
 import { getStripe, PAYMENTS_ENV } from "@/lib/stripe";
 import PageHeader from "@/components/PageHeader";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Loader2, Sparkles, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Check, Loader2, Sparkles, ExternalLink, CheckCircle2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 const PLANS = [
@@ -31,13 +31,12 @@ export default function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const { isActive, isTrialing, subscription, loading: loadingSub, refetch } = useSubscription();
+  const { isActive, isTrialing, subscription, hasComp, isAdmin, hasFullAccess, loading, refetch } = useAccessStatus();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
   const justSucceeded = params.get("success") === "1";
 
-  // Handle return from Stripe Checkout
   useEffect(() => {
     if (justSucceeded) {
       toast.success("¡Suscripción iniciada! Tu prueba de 7 días está activa.");
@@ -49,12 +48,10 @@ export default function Pricing() {
     }
   }, [justSucceeded, params, setParams, refetch]);
 
-  // Auto-redirect active subscribers/trialers to the dashboard.
-  // Skip while checkout is open or right after a successful return.
   useEffect(() => {
-    if (loadingSub || clientSecret || justSucceeded) return;
-    if (isActive) navigate("/", { replace: true });
-  }, [isActive, loadingSub, clientSecret, justSucceeded, navigate]);
+    if (loading || clientSecret || justSucceeded) return;
+    if (hasFullAccess) navigate("/", { replace: true });
+  }, [hasFullAccess, loading, clientSecret, justSucceeded, navigate]);
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) { navigate("/auth"); return; }
@@ -129,6 +126,30 @@ export default function Pricing() {
           <p className="text-sm text-muted-foreground mt-1">Cancela cuando quieras durante la prueba.</p>
         </div>
 
+        {isAdmin && (
+          <Card className="p-4 border-primary/40 bg-primary/5">
+            <div className="flex items-start gap-2 mb-1">
+              <Shield className="w-4 h-4 text-primary mt-0.5" />
+              <div className="font-semibold text-sm">Acceso de administrador activo</div>
+            </div>
+            <div className="text-xs text-muted-foreground pl-6">
+              Tu cuenta entra sin restricciones y no necesita suscripción para usar la app.
+            </div>
+          </Card>
+        )}
+
+        {!isAdmin && hasComp && (
+          <Card className="p-4 border-primary/40 bg-primary/5">
+            <div className="flex items-start gap-2 mb-1">
+              <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+              <div className="font-semibold text-sm">Acceso gratis activo</div>
+            </div>
+            <div className="text-xs text-muted-foreground pl-6">
+              Tu cuenta tiene acceso habilitado y no verá cobros ni bloqueo de pago.
+            </div>
+          </Card>
+        )}
+
         {isActive && subscription && (
           <Card className="p-4 border-primary/40 bg-primary/5">
             <div className="flex items-start gap-2 mb-1">
@@ -183,11 +204,11 @@ export default function Pricing() {
               </div>
               <Button
                 className="w-full"
-                disabled={loadingSub || busyPriceId !== null || isActive}
+                disabled={loading || busyPriceId !== null || hasFullAccess}
                 onClick={() => handleSubscribe(plan.priceId)}
               >
                 {busyPriceId === plan.priceId && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isActive ? "Plan activo" : "Empezar prueba de 7 días"}
+                {hasFullAccess ? "Acceso activo" : "Empezar prueba de 7 días"}
               </Button>
             </Card>
           ))}
