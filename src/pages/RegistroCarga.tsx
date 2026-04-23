@@ -44,6 +44,7 @@ export default function RegistroCarga() {
   const [overnight, setOvernight] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [extrasOpen, setExtrasOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (carga?: Carga) => {
     if (!carga && blocked) {
