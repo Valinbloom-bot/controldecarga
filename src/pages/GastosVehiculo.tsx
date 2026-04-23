@@ -31,6 +31,7 @@ export default function GastosVehiculo() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<GastoVehiculo | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (g?: GastoVehiculo) => {
     if (!g && blocked) {
@@ -55,6 +56,7 @@ export default function GastosVehiculo() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!form.descripcion.trim()) {
       toast.error("Ingresa una descripción");
       return;
@@ -63,9 +65,10 @@ export default function GastosVehiculo() {
       toast.error("Ingresa un monto válido");
       return;
     }
-    if (editing) await updateGastoVehiculo({ ...editing, ...form });
-    else await addGastoVehiculo(form);
-    setOpen(false);
+    setSaving(true);
+    const ok = editing ? await updateGastoVehiculo({ ...editing, ...form }) : await addGastoVehiculo(form);
+    setSaving(false);
+    if (ok) setOpen(false);
   };
 
   const setField = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
