@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Shield, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 
 interface CompRow {
@@ -96,7 +96,7 @@ export default function Admin() {
 
   return (
     <div className="pb-24">
-      <PageHeader title="Admin" subtitle="Otorgar acceso gratuito" icon={Shield} />
+      <PageHeader title="Admin" />
 
       <div className="px-4 space-y-4">
         <Card>
