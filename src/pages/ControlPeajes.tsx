@@ -68,11 +68,11 @@ export default function ControlPeajes() {
             onPDF={(f) => exportPeajesPDF(f)}
             emptyMessage="No hay peajes"
           />
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> Nuevo</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} Peaje</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} /></div>
@@ -84,7 +84,7 @@ export default function ControlPeajes() {
                   </select>
                 </div>
                 <div><Label>Notas</Label><Input value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} /></div>
-                <Button className="w-full" size="lg" onClick={handleSave}>{editing ? "Guardar" : "Registrar"}</Button>
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}</Button>
               </div>
             </DialogContent>
           </Dialog>
