@@ -5,9 +5,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Moon, Sun, FileText, FileSpreadsheet, Truck, Fuel, CreditCard, BarChart3, FileDown, Sparkles, ChevronRight } from "lucide-react";
+import { Moon, Sun, FileText, FileSpreadsheet, Truck, Fuel, CreditCard, BarChart3, FileDown, Sparkles, ChevronRight, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccessStatus } from "@/hooks/useAccessStatus";
 import {
   exportCargasCSV, exportCargasPDF,
   exportGasolinaCSV, exportGasolinaPDF,
@@ -53,7 +53,7 @@ function ExportRow({ icon, title, count, onCSV, onPDF, disabled }: RowProps) {
 
 export default function Configuracion() {
   const { data, toggleDarkMode } = useAppData();
-  const { isActive, isTrialing } = useSubscription();
+  const { isActive, isTrialing, hasComp, isAdmin } = useAccessStatus();
   const [mes, setMes] = useState(format(new Date(), "yyyy-MM"));
 
   const safe = (fn: () => void, emptyMsg: string, isEmpty: boolean) => () => {
@@ -62,32 +62,60 @@ export default function Configuracion() {
     catch (e) { toast.error("Error al exportar"); console.error(e); }
   };
 
+  const accessTitle = isAdmin
+    ? "Acceso de administrador"
+    : hasComp
+      ? "Acceso gratis activo"
+      : isActive
+        ? (isTrialing ? "Período de prueba activo" : "Plan Pro activo")
+        : "Suscripción";
+
+  const accessBody = isAdmin
+    ? "Administra usuarios y entra sin restricciones"
+    : hasComp
+      ? "Tu acceso está habilitado sin cobros"
+      : isActive
+        ? "Gestionar plan"
+        : "Empieza tu prueba de 7 días gratis";
+
   return (
     <div className="pb-20">
       <PageHeader title="Configuración" />
       <div className="px-4 space-y-4">
-        {/* Subscription */}
         <Link
-          to="/precios"
+          to={isAdmin ? "/admin" : "/precios"}
           className="block bg-card border border-border rounded-lg p-4 hover:bg-accent transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
+              {isAdmin ? <Shield className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm">
-                {isActive ? (isTrialing ? "Período de prueba activo" : "Plan Pro activo") : "Suscripción"}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {isActive ? "Gestionar plan" : "Empieza tu prueba de 7 días gratis"}
-              </div>
+              <div className="font-semibold text-sm">{accessTitle}</div>
+              <div className="text-xs text-muted-foreground">{accessBody}</div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </div>
         </Link>
 
-        {/* Dark mode */}
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className="block bg-card border border-border rounded-lg p-4 hover:bg-accent transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm">Panel de administrador</div>
+                <div className="text-xs text-muted-foreground">Gestionar accesos gratis y usuarios</div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </Link>
+        )}
+
         <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {data.darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
@@ -96,7 +124,6 @@ export default function Configuracion() {
           <Switch checked={data.darkMode} onCheckedChange={toggleDarkMode} />
         </div>
 
-        {/* Exports */}
         <div>
           <h2 className="text-sm font-semibold mb-2 px-1">Exportar datos</h2>
           <div className="space-y-2">
@@ -124,7 +151,6 @@ export default function Configuracion() {
           </div>
         </div>
 
-        {/* Monthly summary export */}
         <div>
           <h2 className="text-sm font-semibold mb-2 px-1">Resumen mensual</h2>
           <div className="bg-card border border-border rounded-lg p-3 space-y-3">
@@ -154,7 +180,6 @@ export default function Configuracion() {
           </div>
         </div>
 
-        {/* Full business export */}
         <div>
           <h2 className="text-sm font-semibold mb-2 px-1">Reporte completo</h2>
           <div className="bg-card border border-border rounded-lg p-3 space-y-3">
