@@ -24,6 +24,8 @@ import Pricing from "@/pages/Pricing";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
+const PanelRedirect = () => <ProtectedShell><Dashboard /></ProtectedShell>;
+
 const queryClient = new QueryClient();
 
 
@@ -48,6 +50,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/panel" element={<PanelRedirect />} />
               <Route path="/" element={<ProtectedShell><Dashboard /></ProtectedShell>} />
               <Route path="/cargas" element={<ProtectedShell><RegistroCarga /></ProtectedShell>} />
               <Route path="/gasolina" element={<ProtectedShell><ControlGasolina /></ProtectedShell>} />

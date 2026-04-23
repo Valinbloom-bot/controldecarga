@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Truck, Loader2, CheckCircle2, Mail } from "lucide-react";
+import { getPostLoginPath } from "@/lib/vip-access";
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(100),
@@ -39,11 +40,11 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState("");
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
+    if (user) navigate(getPostLoginPath(user.email), { replace: true });
   }, [user, navigate]);
 
   if (loading) return null;
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to={getPostLoginPath(user.email)} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +129,7 @@ export default function Auth() {
     setBusy(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/`,
+        redirect_uri: `${window.location.origin}${getPostLoginPath(email || undefined)}`,
       });
       if (error) toast.error(error.message);
     } finally {
