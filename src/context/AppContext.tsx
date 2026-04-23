@@ -257,7 +257,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .insert(cargaToRow(c, user.id))
       .select()
       .single();
-    if (error || !row) return;
+    if (error || !row) { notifyError("guardar la carga", error); return; }
     setData((d) => {
       const newCargas = [rowToCarga(row), ...d.cargas];
       return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
