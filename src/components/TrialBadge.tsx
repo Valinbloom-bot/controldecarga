@@ -1,6 +1,6 @@
 import { Sparkles, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccessStatus } from "@/hooks/useAccessStatus";
 
 function daysUntil(iso: string | null): number | null {
   if (!iso) return null;
@@ -11,14 +11,14 @@ function daysUntil(iso: string | null): number | null {
 
 /**
  * - Trialing: shows "X días de prueba"
- * - Free (no sub): shows upgrade chip
- * - Active paid: nothing
+ * - Free (no access): shows upgrade chip
+ * - Active paid/comp/admin: nothing
  */
 export default function TrialBadge() {
-  const { subscription, isActive, isTrialing, loading } = useSubscription();
+  const { subscription, isActive, isTrialing, accessMode, loading } = useAccessStatus();
   if (loading) return null;
 
-  if (isTrialing && subscription?.current_period_end) {
+  if (accessMode === "subscription" && isTrialing && subscription?.current_period_end) {
     const days = daysUntil(subscription.current_period_end);
     if (days === null) return null;
     return (

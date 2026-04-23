@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccessStatus } from "@/hooks/useAccessStatus";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Check } from "lucide-react";
@@ -15,16 +15,16 @@ const PERKS = [
 ];
 
 /**
- * Shows once per user after first login if they have no active subscription.
+ * Shows once per user after first login if they have no paid/trial/comp/admin access.
  */
 export default function FirstVisitProModal() {
   const { user } = useAuth();
-  const { isActive, loading } = useSubscription();
+  const { hasFullAccess, loading } = useAccessStatus();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!user || loading || isActive) return;
+    if (!user || loading || hasFullAccess) return;
     const key = `${STORAGE_KEY}.${user.id}`;
     if (localStorage.getItem(key)) return;
     const t = setTimeout(() => {
@@ -32,7 +32,7 @@ export default function FirstVisitProModal() {
       localStorage.setItem(key, "1");
     }, 600);
     return () => clearTimeout(t);
-  }, [user, loading, isActive]);
+  }, [user, loading, hasFullAccess]);
 
   const handleStart = () => {
     setOpen(false);

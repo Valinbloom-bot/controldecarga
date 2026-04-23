@@ -6,7 +6,13 @@ import { useUserRole } from "@/hooks/useUserRole";
 export type AccessMode = "subscription" | "comp" | "admin" | "none";
 
 export function useAccessStatus() {
-  const { subscription, isActive, isTrialing, loading: loadingSubscription } = useSubscription();
+  const {
+    subscription,
+    isActive,
+    isTrialing,
+    loading: loadingSubscription,
+    refetch,
+  } = useSubscription();
   const { hasComp, loading: loadingComp } = useCompAccess();
   const { isAdmin, loading: loadingRole } = useUserRole();
 
@@ -28,5 +34,6 @@ export function useAccessStatus() {
     hasFullAccess: accessMode !== "none",
     accessMode,
     loading,
+    refetch,
   };
 }
