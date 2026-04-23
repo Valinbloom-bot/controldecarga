@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PAYMENTS_ENV } from "@/lib/stripe";
 
 export interface SubscriptionRow {
   id: string;
@@ -16,6 +17,14 @@ export function useSubscription() {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const syncedRef = useRef<string | null>(null);
+
+  const computeIsActive = (sub: SubscriptionRow | null) => {
+    if (!sub) return false;
+    const periodEnd = sub.current_period_end ? new Date(sub.current_period_end) : null;
+    const notExpired = !periodEnd || periodEnd > new Date();
+    return ["active", "trialing"].includes(sub.status) && notExpired;
+  };
 
   const fetchSub = useCallback(async () => {
     if (!user) {
@@ -30,7 +39,33 @@ export function useSubscription() {
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    setSubscription((data as SubscriptionRow | null) ?? null);
+    const row = (data as SubscriptionRow | null) ?? null;
+    setSubscription(row);
+
+    // If no active local subscription, sync from Stripe once per session
+    // to catch subs created directly in Stripe (no metadata.userId on webhook).
+    if (!computeIsActive(row) && syncedRef.current !== user.id) {
+      syncedRef.current = user.id;
+      try {
+        const { data: synced } = await supabase.functions.invoke("check-subscription", {
+          body: { environment: PAYMENTS_ENV },
+        });
+        if (synced?.subscribed) {
+          // Re-read the freshly upserted row
+          const { data: refreshed } = await supabase
+            .from("subscriptions")
+            .select("id,status,price_id,product_id,current_period_end,cancel_at_period_end,environment")
+            .eq("user_id", user.id)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          setSubscription((refreshed as SubscriptionRow | null) ?? null);
+        }
+      } catch (e) {
+        console.error("check-subscription failed:", e);
+      }
+    }
+
     setLoading(false);
   }, [user]);
 
@@ -53,13 +88,7 @@ export function useSubscription() {
     };
   }, [user, fetchSub]);
 
-  const isActive = (() => {
-    if (!subscription) return false;
-    const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
-    const notExpired = !periodEnd || periodEnd > new Date();
-    return ["active", "trialing"].includes(subscription.status) && notExpired;
-  })();
-
+  const isActive = computeIsActive(subscription);
   const isTrialing = subscription?.status === "trialing";
 
   return { subscription, isActive, isTrialing, loading, refetch: fetchSub };
