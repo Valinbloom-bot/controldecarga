@@ -5,6 +5,7 @@ import { useAccessStatus } from "@/hooks/useAccessStatus";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Check } from "lucide-react";
+import { isVipEmail } from "@/lib/vip-access";
 
 const STORAGE_KEY = "controldecarga.proModalShown";
 
@@ -22,9 +23,10 @@ export default function FirstVisitProModal() {
   const { hasFullAccess, loading } = useAccessStatus();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const isVip = isVipEmail(user?.email);
 
   useEffect(() => {
-    if (!user || loading || hasFullAccess) return;
+    if (!user || loading || hasFullAccess || isVip) return;
     const key = `${STORAGE_KEY}.${user.id}`;
     if (localStorage.getItem(key)) return;
     const t = setTimeout(() => {
@@ -32,7 +34,9 @@ export default function FirstVisitProModal() {
       localStorage.setItem(key, "1");
     }, 600);
     return () => clearTimeout(t);
-  }, [user, loading, hasFullAccess]);
+  }, [user, loading, hasFullAccess, isVip]);
+
+  if (isVip) return null;
 
   const handleStart = () => {
     setOpen(false);

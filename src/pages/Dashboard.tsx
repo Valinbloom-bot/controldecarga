@@ -8,10 +8,14 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { useNavigate } from "react-router-dom";
 import TrialBadge from "@/components/TrialBadge";
 import FirstVisitProModal from "@/components/FirstVisitProModal";
+import { useAuth } from "@/hooks/useAuth";
+import { isVipEmail } from "@/lib/vip-access";
 
 export default function Dashboard() {
   const { data } = useAppData();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const isVip = isVipEmail(user?.email);
   const now = new Date();
   const currentMonth = format(now, "yyyy-MM");
   const monthly = computeMonthlySummary(data.cargas, data.gasolina, data.peajes, currentMonth, data.gastosVehiculo);
@@ -38,10 +42,10 @@ export default function Dashboard() {
 
   return (
     <div className="pb-20">
-      <FirstVisitProModal />
+      {!isVip && <FirstVisitProModal />}
       <PageHeader title="Panel Principal" />
       <div className="px-4 mb-3 flex justify-end">
-        <TrialBadge />
+        {!isVip && <TrialBadge />}
       </div>
 
       {/* Quick Actions */}

@@ -1,7 +1,9 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isVipEmail } from "@/lib/vip-access";
 
 const FAILED_STATUSES = ["past_due", "unpaid", "incomplete"];
 
@@ -10,10 +12,12 @@ const FAILED_STATUSES = ["past_due", "unpaid", "incomplete"];
  * Directs them to /cuenta to update their card.
  */
 export function PaymentFailedBanner() {
+  const { user } = useAuth();
   const { subscription } = useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
 
+  if (isVipEmail(user?.email)) return null;
   if (!subscription || !FAILED_STATUSES.includes(subscription.status)) return null;
 
   const onAccount = location.pathname.startsWith("/cuenta");
