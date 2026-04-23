@@ -31,6 +31,7 @@ export default function ControlPeajes() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroPeaje | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (p?: RegistroPeaje) => {
     if (!p && blocked) {
@@ -43,10 +44,12 @@ export default function ControlPeajes() {
     setOpen(true);
   };
 
-  const handleSave = () => {
-    if (editing) updatePeaje({ ...editing, ...form });
-    else addPeaje(form);
-    setOpen(false);
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    const ok = editing ? await updatePeaje({ ...editing, ...form }) : await addPeaje(form);
+    setSaving(false);
+    if (ok) setOpen(false);
   };
 
   const sorted = [...data.peajes].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
