@@ -35,10 +35,11 @@ export default function Pricing() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
+  const justSucceeded = params.get("success") === "1";
 
   // Handle return from Stripe Checkout
   useEffect(() => {
-    if (params.get("success") === "1") {
+    if (justSucceeded) {
       toast.success("¡Suscripción iniciada! Tu prueba de 7 días está activa.");
       const t = setInterval(refetch, 1500);
       const stop = setTimeout(() => clearInterval(t), 12000);
@@ -46,7 +47,14 @@ export default function Pricing() {
       setParams(params, { replace: true });
       return () => { clearInterval(t); clearTimeout(stop); };
     }
-  }, [params, setParams, refetch]);
+  }, [justSucceeded, params, setParams, refetch]);
+
+  // Auto-redirect active subscribers/trialers to the dashboard.
+  // Skip while checkout is open or right after a successful return.
+  useEffect(() => {
+    if (loadingSub || clientSecret || justSucceeded) return;
+    if (isActive) navigate("/", { replace: true });
+  }, [isActive, loadingSub, clientSecret, justSucceeded, navigate]);
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) { navigate("/auth"); return; }
