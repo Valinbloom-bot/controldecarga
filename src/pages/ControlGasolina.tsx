@@ -136,7 +136,7 @@ export default function ControlGasolina() {
                   </Select>
                 </div>
                 <div><Label>Notas</Label><Input value={form.notas} onChange={e => setField("notas", e.target.value)} /></div>
-                <Button className="w-full" size="lg" onClick={handleSave}>{editing ? "Guardar" : "Registrar"}</Button>
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}</Button>
               </div>
             </DialogContent>
           </Dialog>
