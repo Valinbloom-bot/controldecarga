@@ -39,6 +39,7 @@ export default function ControlGasolina() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroGasolina | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (g?: RegistroGasolina) => {
     if (!g && blocked) {
@@ -56,11 +57,13 @@ export default function ControlGasolina() {
     setOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     const payload = { ...form, cargaId: form.cargaId || undefined };
-    if (editing) updateGasolina({ ...editing, ...payload });
-    else addGasolina(payload);
-    setOpen(false);
+    setSaving(true);
+    const ok = editing ? await updateGasolina({ ...editing, ...payload }) : await addGasolina(payload);
+    setSaving(false);
+    if (ok) setOpen(false);
   };
 
   const setField = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
