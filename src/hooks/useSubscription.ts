@@ -27,6 +27,8 @@ export function useSubscription() {
   };
 
   const fetchSub = useCallback(async () => {
+    setLoading(true);
+
     if (!user) {
       setSubscription(null);
       syncedRef.current = null;
