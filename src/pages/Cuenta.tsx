@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccessStatus } from "@/hooks/useAccessStatus";
 import { PAYMENTS_ENV } from "@/lib/stripe";
 import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
@@ -28,6 +28,8 @@ import {
   LogOut,
   CheckCircle2,
   AlertCircle,
+  Shield,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,7 +41,16 @@ const PLAN_LABEL: Record<string, { name: string; price: string; period: string }
 export default function Cuenta() {
   const navigate = useNavigate();
   const { user, displayName, signOut } = useAuth();
-  const { subscription, isActive, isTrialing, loading } = useSubscription();
+  const {
+    subscription,
+    isActive,
+    isTrialing,
+    hasComp,
+    isAdmin,
+    hasFullAccess,
+    accessMode,
+    loading,
+  } = useAccessStatus();
   const [opening, setOpening] = useState<string | null>(null);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
@@ -76,7 +87,6 @@ export default function Cuenta() {
     <div className="pb-20">
       <PageHeader title="Mi cuenta" />
       <div className="px-4 space-y-4">
-        {/* User info */}
         <Card className="p-4">
           <div className="text-xs text-muted-foreground">Sesión iniciada como</div>
           <div className="font-semibold text-sm mt-0.5 truncate">
@@ -87,7 +97,23 @@ export default function Cuenta() {
           )}
         </Card>
 
-        {/* Subscription status */}
+        {isAdmin && (
+          <Link to="/admin" className="block">
+            <Card className="p-4 border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm">Panel de administrador</div>
+                  <div className="text-xs text-muted-foreground">Gestionar accesos gratis y usuarios</div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </Card>
+          </Link>
+        )}
+
         {loading ? (
           <Card className="p-6 flex justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -127,7 +153,7 @@ export default function Cuenta() {
               </div>
             </Card>
           </>
-        ) : isActive && subscription ? (
+        ) : accessMode === "subscription" && isActive && subscription ? (
           <>
             <Card className="p-4 border-primary/40 bg-primary/5">
               <div className="flex items-start gap-2">
@@ -151,7 +177,6 @@ export default function Cuenta() {
               </div>
             </Card>
 
-            {/* Next billing */}
             <Card className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -170,7 +195,6 @@ export default function Cuenta() {
               </div>
             </Card>
 
-            {/* Management actions */}
             <div className="space-y-2">
               <h2 className="text-sm font-semibold px-1">Gestionar suscripción</h2>
 
@@ -248,7 +272,31 @@ export default function Cuenta() {
               Las acciones de suscripción se gestionan en el portal seguro de pagos. Se abre en una nueva pestaña.
             </p>
           </>
-        ) : (
+        ) : hasComp ? (
+          <Card className="p-4 border-primary/40 bg-primary/5">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm">Acceso gratis activo</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Tu cuenta tiene acceso permanente sin cobros ni bloqueo por suscripción.
+                </div>
+              </div>
+            </div>
+          </Card>
+        ) : isAdmin ? (
+          <Card className="p-4 border-primary/40 bg-primary/5">
+            <div className="flex items-start gap-2">
+              <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm">Administrador activo</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Tu cuenta entra sin restricciones y puede administrar accesos de otros usuarios.
+                </div>
+              </div>
+            </div>
+          </Card>
+        ) : !hasFullAccess ? (
           <Card className="p-4">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -265,9 +313,8 @@ export default function Cuenta() {
               </div>
             </div>
           </Card>
-        )}
+        ) : null}
 
-        {/* Sign out */}
         <Card className="p-3">
           <button
             onClick={handleSignOut}
