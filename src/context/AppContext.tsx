@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { AppData, Carga, RegistroGasolina, RegistroPeaje, GastoVehiculo, Meta, defaultAppData } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+function notifyError(action: string, err: any) {
+  console.error(`[AppContext] ${action} failed:`, err);
+  toast.error(`No se pudo ${action}. ${err?.message ?? "Revisa tu conexión e inténtalo de nuevo."}`);
+}
 
 interface AppContextType {
   data: AppData;
