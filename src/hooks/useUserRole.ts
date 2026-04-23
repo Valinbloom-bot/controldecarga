@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -7,29 +7,42 @@ export function useUserRole() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchRole = useCallback(async () => {
     if (!user) {
       setIsAdmin(false);
       setLoading(false);
       return;
     }
     setLoading(true);
-    supabase
+    const { data } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setIsAdmin(!!data);
-        setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .maybeSingle();
+    setIsAdmin(!!data);
+    setLoading(false);
   }, [user]);
 
-  return { isAdmin, loading };
+  useEffect(() => {
+    fetchRole();
+  }, [fetchRole]);
+
+  // Realtime: react to admin role grants/revokes for this user.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`user-roles-${user.id}-${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${user.id}` },
+        () => fetchRole(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchRole]);
+
+  return { isAdmin, loading, refetch: fetchRole };
 }

@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) {
@@ -28,6 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setDisplayName(data?.display_name ?? null);
           });
         }, 0);
+        // Notify access hooks to re-check comp access on fresh sign-ins.
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+          window.dispatchEvent(new CustomEvent("comp-access-updated"));
+        }
       } else {
         setDisplayName(null);
       }
