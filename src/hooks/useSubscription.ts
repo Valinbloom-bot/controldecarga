@@ -29,43 +29,49 @@ export function useSubscription() {
   const fetchSub = useCallback(async () => {
     if (!user) {
       setSubscription(null);
+      syncedRef.current = null;
       setLoading(false);
       return;
     }
-    const { data } = await supabase
-      .from("subscriptions")
-      .select("id,status,price_id,product_id,current_period_end,cancel_at_period_end,environment")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const row = (data as SubscriptionRow | null) ?? null;
-    setSubscription(row);
 
-    // If no active local subscription, sync from Stripe once per session
-    // to catch subs created directly in Stripe (no metadata.userId on webhook).
+    const readRow = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("id,status,price_id,product_id,current_period_end,cancel_at_period_end,environment")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return (data as SubscriptionRow | null) ?? null;
+    };
+
+    let row = await readRow();
+
+    // If no active local subscription, sync from Stripe (once per session)
+    // BEFORE marking loading=false, so the paywall doesn't flash for users
+    // whose subscription/trial was created directly in Stripe.
     if (!computeIsActive(row) && syncedRef.current !== user.id) {
       syncedRef.current = user.id;
       try {
-        const { data: synced } = await supabase.functions.invoke("check-subscription", {
-          body: { environment: PAYMENTS_ENV },
-        });
-        if (synced?.subscribed) {
-          // Re-read the freshly upserted row
-          const { data: refreshed } = await supabase
-            .from("subscriptions")
-            .select("id,status,price_id,product_id,current_period_end,cancel_at_period_end,environment")
-            .eq("user_id", user.id)
-            .order("updated_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          setSubscription((refreshed as SubscriptionRow | null) ?? null);
+        // Try both environments so users with subs in either mode are recognized.
+        const envs: Array<"sandbox" | "live"> = PAYMENTS_ENV === "live"
+          ? ["live", "sandbox"]
+          : ["sandbox", "live"];
+        for (const env of envs) {
+          const { data: synced } = await supabase.functions.invoke("check-subscription", {
+            body: { environment: env },
+          });
+          if (synced?.subscribed) {
+            row = await readRow();
+            if (computeIsActive(row)) break;
+          }
         }
       } catch (e) {
         console.error("check-subscription failed:", e);
       }
     }
 
+    setSubscription(row);
     setLoading(false);
   }, [user]);
 
