@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { AppData, Carga, RegistroGasolina, RegistroPeaje, GastoVehiculo, Meta, defaultAppData } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+function notifyError(action: string, err: any) {
+  console.error(`[AppContext] ${action} failed:`, err);
+  toast.error(`No se pudo ${action}. ${err?.message ?? "Revisa tu conexión e inténtalo de nuevo."}`);
+}
 
 interface AppContextType {
   data: AppData;
@@ -212,7 +218,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [{ data: cR }, { data: gR }, { data: pR }, { data: mR }, { data: vR }] = await Promise.all([
+      const [cRes, gRes, pRes, mRes, vRes] = await Promise.all([
         supabase.from("cargas").select("*").order("created_at", { ascending: false }),
         supabase.from("gasolina").select("*").order("created_at", { ascending: false }),
         supabase.from("peajes").select("*").order("created_at", { ascending: false }),
@@ -220,15 +226,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         supabase.from("gastos_vehiculo" as any).select("*").order("created_at", { ascending: false }),
       ]);
       if (cancelled) return;
-      const gasolina = (gR ?? []).map(rowToGas);
-      const cargas = applyCalcs((cR ?? []).map(rowToCarga), gasolina);
+      const firstError = [cRes, gRes, pRes, mRes, vRes].find((r) => r.error)?.error;
+      if (firstError) notifyError("cargar tus datos", firstError);
+      const gasolina = (gRes.data ?? []).map(rowToGas);
+      const cargas = applyCalcs((cRes.data ?? []).map(rowToCarga), gasolina);
       setData((d) => ({
         ...d,
         cargas,
         gasolina,
-        peajes: (pR ?? []).map(rowToPeaje),
-        metas: (mR ?? []).map(rowToMeta),
-        gastosVehiculo: (vR ?? []).map(rowToGastoVehiculo),
+        peajes: (pRes.data ?? []).map(rowToPeaje),
+        metas: (mRes.data ?? []).map(rowToMeta),
+        gastosVehiculo: (vRes.data ?? []).map(rowToGastoVehiculo),
       }));
       setLoading(false);
     })();
@@ -249,7 +257,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .insert(cargaToRow(c, user.id))
       .select()
       .single();
-    if (error || !row) return;
+    if (error || !row) { notifyError("guardar la carga", error); return; }
     setData((d) => {
       const newCargas = [rowToCarga(row), ...d.cargas];
       return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
@@ -259,7 +267,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateCarga = useCallback(async (c: Carga) => {
     if (!user) return;
     const { error } = await supabase.from("cargas").update(cargaToRow(c, user.id)).eq("id", c.id);
-    if (error) return;
+    if (error) { notifyError("actualizar la carga", error); return; }
     setData((d) => {
       const newCargas = d.cargas.map((x) => (x.id === c.id ? { ...rowToCarga({ ...cargaToRow(c, user.id), id: c.id, created_at: c.createdAt }) } : x));
       return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
@@ -269,7 +277,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteCarga = useCallback(async (id: string) => {
     if (!user) return;
     const { error } = await supabase.from("cargas").delete().eq("id", id);
-    if (error) return;
+    if (error) { notifyError("eliminar la carga", error); return; }
     setData((d) => {
       const newGas = d.gasolina.map((g) => (g.cargaId === id ? { ...g, cargaId: undefined } : g));
       const newCargas = d.cargas.filter((x) => x.id !== id);
@@ -285,7 +293,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .insert(gasToRow(g, user.id))
       .select()
       .single();
-    if (error || !row) return;
+    if (error || !row) { notifyError("guardar la gasolina", error); return; }
     setData((d) => {
       const newGas = [rowToGas(row), ...d.gasolina];
       return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
@@ -295,7 +303,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateGasolina = useCallback(async (g: RegistroGasolina) => {
     if (!user) return;
     const { error } = await supabase.from("gasolina").update(gasToRow(g, user.id)).eq("id", g.id);
-    if (error) return;
+    if (error) { notifyError("actualizar la gasolina", error); return; }
     setData((d) => {
       const newGas = d.gasolina.map((x) => (x.id === g.id ? rowToGas({ ...gasToRow(g, user.id), id: g.id, created_at: g.createdAt }) : x));
       return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
@@ -305,7 +313,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteGasolina = useCallback(async (id: string) => {
     if (!user) return;
     const { error } = await supabase.from("gasolina").delete().eq("id", id);
-    if (error) return;
+    if (error) { notifyError("eliminar la gasolina", error); return; }
     setData((d) => {
       const newGas = d.gasolina.filter((x) => x.id !== id);
       return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
@@ -320,21 +328,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .insert(peajeToRow(p, user.id))
       .select()
       .single();
-    if (error || !row) return;
+    if (error || !row) { notifyError("guardar el peaje", error); return; }
     setData((d) => ({ ...d, peajes: [rowToPeaje(row), ...d.peajes] }));
   }, [user]);
 
   const updatePeaje = useCallback(async (p: RegistroPeaje) => {
     if (!user) return;
     const { error } = await supabase.from("peajes").update(peajeToRow(p, user.id)).eq("id", p.id);
-    if (error) return;
+    if (error) { notifyError("actualizar el peaje", error); return; }
     setData((d) => ({ ...d, peajes: d.peajes.map((x) => (x.id === p.id ? p : x)) }));
   }, [user]);
 
   const deletePeaje = useCallback(async (id: string) => {
     if (!user) return;
     const { error } = await supabase.from("peajes").delete().eq("id", id);
-    if (error) return;
+    if (error) { notifyError("eliminar el peaje", error); return; }
     setData((d) => ({ ...d, peajes: d.peajes.filter((x) => x.id !== id) }));
   }, [user]);
 
@@ -346,21 +354,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .insert(gastoVehiculoToRow(g, user.id))
       .select()
       .single();
-    if (error || !row) return;
+    if (error || !row) { notifyError("guardar el gasto", error); return; }
     setData((d) => ({ ...d, gastosVehiculo: [rowToGastoVehiculo(row), ...d.gastosVehiculo] }));
   }, [user]);
 
   const updateGastoVehiculo = useCallback(async (g: GastoVehiculo) => {
     if (!user) return;
     const { error } = await supabase.from("gastos_vehiculo" as any).update(gastoVehiculoToRow(g, user.id)).eq("id", g.id);
-    if (error) return;
+    if (error) { notifyError("actualizar el gasto", error); return; }
     setData((d) => ({ ...d, gastosVehiculo: d.gastosVehiculo.map((x) => (x.id === g.id ? g : x)) }));
   }, [user]);
 
   const deleteGastoVehiculo = useCallback(async (id: string) => {
     if (!user) return;
     const { error } = await supabase.from("gastos_vehiculo" as any).delete().eq("id", id);
-    if (error) return;
+    if (error) { notifyError("eliminar el gasto", error); return; }
     setData((d) => ({ ...d, gastosVehiculo: d.gastosVehiculo.filter((x) => x.id !== id) }));
   }, [user]);
 
@@ -382,7 +390,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       )
       .select()
       .single();
-    if (error || !row) return;
+    if (error || !row) { notifyError("guardar la meta", error); return; }
     setData((d) => {
       const idx = d.metas.findIndex((x) => x.mes === m.mes);
       const newMeta = rowToMeta(row);
