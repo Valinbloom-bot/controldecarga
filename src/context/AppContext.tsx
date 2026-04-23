@@ -218,7 +218,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [{ data: cR }, { data: gR }, { data: pR }, { data: mR }, { data: vR }] = await Promise.all([
+      const [cRes, gRes, pRes, mRes, vRes] = await Promise.all([
         supabase.from("cargas").select("*").order("created_at", { ascending: false }),
         supabase.from("gasolina").select("*").order("created_at", { ascending: false }),
         supabase.from("peajes").select("*").order("created_at", { ascending: false }),
@@ -226,15 +226,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         supabase.from("gastos_vehiculo" as any).select("*").order("created_at", { ascending: false }),
       ]);
       if (cancelled) return;
-      const gasolina = (gR ?? []).map(rowToGas);
-      const cargas = applyCalcs((cR ?? []).map(rowToCarga), gasolina);
+      const firstError = [cRes, gRes, pRes, mRes, vRes].find((r) => r.error)?.error;
+      if (firstError) notifyError("cargar tus datos", firstError);
+      const gasolina = (gRes.data ?? []).map(rowToGas);
+      const cargas = applyCalcs((cRes.data ?? []).map(rowToCarga), gasolina);
       setData((d) => ({
         ...d,
         cargas,
         gasolina,
-        peajes: (pR ?? []).map(rowToPeaje),
-        metas: (mR ?? []).map(rowToMeta),
-        gastosVehiculo: (vR ?? []).map(rowToGastoVehiculo),
+        peajes: (pRes.data ?? []).map(rowToPeaje),
+        metas: (mRes.data ?? []).map(rowToMeta),
+        gastosVehiculo: (vRes.data ?? []).map(rowToGastoVehiculo),
       }));
       setLoading(false);
     })();
