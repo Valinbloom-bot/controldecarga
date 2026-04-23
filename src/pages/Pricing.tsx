@@ -37,18 +37,6 @@ export default function Pricing() {
   const [openingPortal, setOpeningPortal] = useState(false);
   const justSucceeded = params.get("success") === "1";
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (hasFullAccess && !clientSecret && !justSucceeded) {
-    return <Navigate to="/" replace />;
-  }
-
   useEffect(() => {
     if (justSucceeded) {
       toast.success("¡Suscripción iniciada! Tu prueba de 7 días está activa.");
