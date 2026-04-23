@@ -21,6 +21,7 @@ import DesgloseMes from "@/pages/Metas";
 import Configuracion from "@/pages/Configuracion";
 import Cuenta from "@/pages/Cuenta";
 import Pricing from "@/pages/Pricing";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/configuracion" element={<ProtectedShell><Configuracion /></ProtectedShell>} />
               <Route path="/cuenta" element={<ProtectedShell><Cuenta /></ProtectedShell>} />
               <Route path="/precios" element={<ProtectedShell><Pricing /></ProtectedShell>} />
+              <Route path="/admin" element={<ProtectedShell><Admin /></ProtectedShell>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
