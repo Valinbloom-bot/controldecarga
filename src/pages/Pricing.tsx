@@ -108,6 +108,18 @@ export default function Pricing() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (hasFullAccess && !clientSecret && !justSucceeded) {
+    return <Navigate to="/" replace />;
+  }
+
   if (clientSecret) {
     return (
       <div className="pb-20">
