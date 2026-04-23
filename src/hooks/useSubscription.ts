@@ -66,6 +66,9 @@ export function useSubscription() {
             if (computeIsActive(row)) break;
           }
         }
+        // After Stripe sync, refresh sibling access signals (admin role, comp access)
+        // so the UI clears the paywall and reveals admin without a manual reload.
+        window.dispatchEvent(new CustomEvent("comp-access-updated"));
       } catch (e) {
         console.error("check-subscription failed:", e);
       }
