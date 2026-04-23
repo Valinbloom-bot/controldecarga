@@ -138,8 +138,8 @@ export default function GastosVehiculo() {
                   <Label>Notas (opcional)</Label>
                   <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} rows={2} />
                 </div>
-                <Button className="w-full" size="lg" onClick={handleSave}>
-                  {editing ? "Guardar" : "Registrar"}
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>
+                  {saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}
                 </Button>
               </div>
             </DialogContent>
