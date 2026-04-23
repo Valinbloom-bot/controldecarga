@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, Loader2, Sparkles, ExternalLink, CheckCircle2, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { getPostLoginPath, isVipEmail } from "@/lib/vip-access";
 
 const PLANS = [
   { priceId: "pro_monthly", name: "Mensual", price: "$4.99", period: "/mes", badge: null as string | null },
@@ -32,6 +33,7 @@ export default function Pricing() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { isActive, isTrialing, subscription, hasComp, isAdmin, hasFullAccess, loading, refetch } = useAccessStatus();
+  const isVip = isVipEmail(user?.email);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
@@ -49,9 +51,17 @@ export default function Pricing() {
   }, [justSucceeded, params, setParams, refetch]);
 
   useEffect(() => {
+    if (isVip) {
+      navigate(getPostLoginPath(user?.email), { replace: true });
+      return;
+    }
     if (loading || clientSecret || justSucceeded) return;
     if (hasFullAccess) navigate("/", { replace: true });
-  }, [hasFullAccess, loading, clientSecret, justSucceeded, navigate]);
+  }, [hasFullAccess, loading, clientSecret, justSucceeded, navigate, isVip, user?.email]);
+
+  if (isVip) {
+    return <Navigate to={getPostLoginPath(user?.email)} replace />;
+  }
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) { navigate("/auth"); return; }
