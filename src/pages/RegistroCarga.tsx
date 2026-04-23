@@ -366,8 +366,8 @@ export default function RegistroCarga() {
                   <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} placeholder="Notas opcionales" rows={2} />
                 </div>
 
-                <Button className="w-full h-12 text-base" size="lg" onClick={handleSave}>
-                  {editing ? "Guardar Cambios" : "Registrar Carga"}
+                <Button className="w-full h-12 text-base" size="lg" onClick={handleSave} disabled={saving}>
+                  {saving ? "Guardando..." : (editing ? "Guardar Cambios" : "Registrar Carga")}
                 </Button>
               </div>
             </DialogContent>
