@@ -44,6 +44,7 @@ export default function RegistroCarga() {
   const [overnight, setOvernight] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [extrasOpen, setExtrasOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (carga?: Carga) => {
     if (!carga && blocked) {
@@ -79,6 +80,7 @@ export default function RegistroCarga() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
       toast.error("Completa recogida y entrega");
       return;
@@ -118,12 +120,13 @@ export default function RegistroCarga() {
       notas: form.notas,
     };
 
+    setSaving(true);
+    let ok = false;
     if (editing) {
-      await updateCarga({ ...editing, ...payload });
+      ok = await updateCarga({ ...editing, ...payload });
     } else {
-      await addCarga(payload);
-      // Log toll separately if entered
-      if (form.peajes > 0) {
+      ok = await addCarga(payload);
+      if (ok && form.peajes > 0) {
         await addPeaje({
           fecha: today,
           ubicacionCarretera: `${form.ubicacionRecogida} → ${form.ubicacionEntrega}`,
@@ -133,8 +136,11 @@ export default function RegistroCarga() {
         });
       }
     }
-    setOpen(false);
-    setEditing(null);
+    setSaving(false);
+    if (ok) {
+      setOpen(false);
+      setEditing(null);
+    }
   };
 
   const setField = (key: string, value: string | number) => {
@@ -185,13 +191,13 @@ export default function RegistroCarga() {
             onPDF={(f) => exportCargasPDF(f)}
             emptyMessage="No hay cargas"
           />
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}>
                 <Plus className="w-4 h-4 mr-1" /> Nueva
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[92vh] overflow-y-auto max-w-md">
+            <DialogContent className="max-h-[92vh] overflow-y-auto max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
               <DialogHeader>
                 <DialogTitle>{editing ? "Editar Carga" : "Nueva Carga"}</DialogTitle>
               </DialogHeader>
@@ -360,8 +366,8 @@ export default function RegistroCarga() {
                   <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} placeholder="Notas opcionales" rows={2} />
                 </div>
 
-                <Button className="w-full h-12 text-base" size="lg" onClick={handleSave}>
-                  {editing ? "Guardar Cambios" : "Registrar Carga"}
+                <Button className="w-full h-12 text-base" size="lg" onClick={handleSave} disabled={saving}>
+                  {saving ? "Guardando..." : (editing ? "Guardar Cambios" : "Registrar Carga")}
                 </Button>
               </div>
             </DialogContent>

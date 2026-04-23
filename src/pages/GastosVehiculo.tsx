@@ -31,6 +31,7 @@ export default function GastosVehiculo() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<GastoVehiculo | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (g?: GastoVehiculo) => {
     if (!g && blocked) {
@@ -55,6 +56,7 @@ export default function GastosVehiculo() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!form.descripcion.trim()) {
       toast.error("Ingresa una descripción");
       return;
@@ -63,9 +65,10 @@ export default function GastosVehiculo() {
       toast.error("Ingresa un monto válido");
       return;
     }
-    if (editing) await updateGastoVehiculo({ ...editing, ...form });
-    else await addGastoVehiculo(form);
-    setOpen(false);
+    setSaving(true);
+    const ok = editing ? await updateGastoVehiculo({ ...editing, ...form }) : await addGastoVehiculo(form);
+    setSaving(false);
+    if (ok) setOpen(false);
   };
 
   const setField = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
@@ -87,13 +90,13 @@ export default function GastosVehiculo() {
       <PageHeader
         title="Gastos del Vehículo"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}>
                 <Plus className="w-4 h-4 mr-1" /> Nuevo
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md">
+            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
               <DialogHeader>
                 <DialogTitle>{editing ? "Editar" : "Nuevo"} Gasto del Vehículo</DialogTitle>
               </DialogHeader>
@@ -135,8 +138,8 @@ export default function GastosVehiculo() {
                   <Label>Notas (opcional)</Label>
                   <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} rows={2} />
                 </div>
-                <Button className="w-full" size="lg" onClick={handleSave}>
-                  {editing ? "Guardar" : "Registrar"}
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>
+                  {saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}
                 </Button>
               </div>
             </DialogContent>

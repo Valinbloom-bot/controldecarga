@@ -39,6 +39,7 @@ export default function ControlGasolina() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RegistroGasolina | null>(null);
   const [form, setForm] = useState(buildEmptyForm);
+  const [saving, setSaving] = useState(false);
 
   const handleOpen = (g?: RegistroGasolina) => {
     if (!g && blocked) {
@@ -56,11 +57,13 @@ export default function ControlGasolina() {
     setOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     const payload = { ...form, cargaId: form.cargaId || undefined };
-    if (editing) updateGasolina({ ...editing, ...payload });
-    else addGasolina(payload);
-    setOpen(false);
+    setSaving(true);
+    const ok = editing ? await updateGasolina({ ...editing, ...payload }) : await addGasolina(payload);
+    setSaving(false);
+    if (ok) setOpen(false);
   };
 
   const setField = (k: string, v: string | number) => setForm(f => ({ ...f, [k]: v }));
@@ -91,11 +94,11 @@ export default function ControlGasolina() {
             onPDF={(f) => exportGasolinaPDF(f)}
             emptyMessage="No hay registros de gasolina"
           />
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> Nueva</Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md">
+            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Nueva"} Gasolina</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -133,7 +136,7 @@ export default function ControlGasolina() {
                   </Select>
                 </div>
                 <div><Label>Notas</Label><Input value={form.notas} onChange={e => setField("notas", e.target.value)} /></div>
-                <Button className="w-full" size="lg" onClick={handleSave}>{editing ? "Guardar" : "Registrar"}</Button>
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}</Button>
               </div>
             </DialogContent>
           </Dialog>
