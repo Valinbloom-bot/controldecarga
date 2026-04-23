@@ -3,14 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCompAccess } from "@/hooks/useCompAccess";
 import { useUserRole } from "@/hooks/useUserRole";
+import { isVipEmail } from "@/lib/vip-access";
 
 export type AccessMode = "subscription" | "comp" | "admin" | "none";
-
-// These emails ALWAYS get full access — no async checks needed.
-const VIP_EMAILS = [
-  "medusashookah@gmail.com",
-  "ojose122687@gmail.com",
-];
 
 export function useAccessStatus() {
   const { user } = useAuth();
@@ -24,7 +19,7 @@ export function useAccessStatus() {
   const { hasComp, loading: loadingComp } = useCompAccess();
   const { isAdmin, loading: loadingRole } = useUserRole();
 
-  const isVip = !!user?.email && VIP_EMAILS.includes(user.email.toLowerCase());
+  const isVip = isVipEmail(user?.email);
 
   const loading = isVip ? false : (loadingSubscription || loadingComp || loadingRole);
 
