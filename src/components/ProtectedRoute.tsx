@@ -21,6 +21,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (!user) return <Navigate to="/auth" replace />;
 
+  if (hasFullAccess && location.pathname.startsWith("/precios")) {
+    return <Navigate to="/" replace />;
+  }
+
   const isExempt = SUB_EXEMPT_ROUTES.some((p) => location.pathname.startsWith(p));
   if (!hasFullAccess && !isExempt) {
     return <Navigate to="/precios" replace />;

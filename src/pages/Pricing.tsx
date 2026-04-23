@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
@@ -36,6 +36,18 @@ export default function Pricing() {
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
   const justSucceeded = params.get("success") === "1";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (hasFullAccess && !clientSecret && !justSucceeded) {
+    return <Navigate to="/" replace />;
+  }
 
   useEffect(() => {
     if (justSucceeded) {
