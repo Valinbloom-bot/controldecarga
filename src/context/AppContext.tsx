@@ -4,27 +4,41 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-function notifyError(action: string, err: any) {
-  console.error(`[AppContext] ${action} failed:`, err);
-  toast.error(`No se pudo ${action}. ${err?.message ?? "Revisa tu conexión e inténtalo de nuevo."}`);
+const SAVE_SUCCESS_MSG = "Guardado en la nube ✓";
+const SAVE_ERROR_MSG = "Error al guardar - intenta de nuevo";
+const DELETE_SUCCESS_MSG = "Eliminado en la nube ✓";
+
+function notifySaveError(err: any) {
+  console.error("[AppContext] save failed:", err);
+  toast.error(SAVE_ERROR_MSG);
+}
+function notifyDeleteError(err: any) {
+  console.error("[AppContext] delete failed:", err);
+  toast.error(SAVE_ERROR_MSG);
+}
+function notifySaveSuccess() {
+  toast.success(SAVE_SUCCESS_MSG);
+}
+function notifyDeleteSuccess() {
+  toast.success(DELETE_SUCCESS_MSG);
 }
 
 interface AppContextType {
   data: AppData;
   loading: boolean;
-  addCarga: (c: Omit<Carga, "id" | "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla" | "createdAt">) => Promise<void>;
-  updateCarga: (c: Carga) => Promise<void>;
-  deleteCarga: (id: string) => Promise<void>;
-  addGasolina: (g: Omit<RegistroGasolina, "id" | "totalGasolina" | "totalGastado" | "createdAt">) => Promise<void>;
-  updateGasolina: (g: RegistroGasolina) => Promise<void>;
-  deleteGasolina: (id: string) => Promise<void>;
-  addPeaje: (p: Omit<RegistroPeaje, "id" | "createdAt">) => Promise<void>;
-  updatePeaje: (p: RegistroPeaje) => Promise<void>;
-  deletePeaje: (id: string) => Promise<void>;
-  addGastoVehiculo: (g: Omit<GastoVehiculo, "id" | "createdAt">) => Promise<void>;
-  updateGastoVehiculo: (g: GastoVehiculo) => Promise<void>;
-  deleteGastoVehiculo: (id: string) => Promise<void>;
-  setMeta: (m: Omit<Meta, "id">) => Promise<void>;
+  addCarga: (c: Omit<Carga, "id" | "millasTotal" | "totalGastos" | "gananciaNeta" | "gananciaPorMilla" | "ingresoPorMilla" | "createdAt">) => Promise<boolean>;
+  updateCarga: (c: Carga) => Promise<boolean>;
+  deleteCarga: (id: string) => Promise<boolean>;
+  addGasolina: (g: Omit<RegistroGasolina, "id" | "totalGasolina" | "totalGastado" | "createdAt">) => Promise<boolean>;
+  updateGasolina: (g: RegistroGasolina) => Promise<boolean>;
+  deleteGasolina: (id: string) => Promise<boolean>;
+  addPeaje: (p: Omit<RegistroPeaje, "id" | "createdAt">) => Promise<boolean>;
+  updatePeaje: (p: RegistroPeaje) => Promise<boolean>;
+  deletePeaje: (id: string) => Promise<boolean>;
+  addGastoVehiculo: (g: Omit<GastoVehiculo, "id" | "createdAt">) => Promise<boolean>;
+  updateGastoVehiculo: (g: GastoVehiculo) => Promise<boolean>;
+  deleteGastoVehiculo: (id: string) => Promise<boolean>;
+  setMeta: (m: Omit<Meta, "id">) => Promise<boolean>;
   toggleDarkMode: () => void;
 }
 
@@ -55,7 +69,7 @@ function rowToCarga(r: any): Carga {
     gastosComida: Number(r.gastos_comida) || 0,
     hospedaje: Number(r.hospedaje) || 0,
     otrosGastos: Number(r.otros_gastos) || 0,
-    totalGastos: 0, // recalculated below
+    totalGastos: 0,
     gananciaNeta: 0,
     gananciaPorMilla: 0,
     ingresoPorMilla: 0,
@@ -208,7 +222,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(DARK_KEY, data.darkMode ? "1" : "0");
   }, [data.darkMode]);
 
-  // Load all data when user changes
   useEffect(() => {
     if (!user) {
       setData((d) => ({ ...defaultAppData, darkMode: d.darkMode }));
@@ -227,7 +240,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ]);
       if (cancelled) return;
       const firstError = [cRes, gRes, pRes, mRes, vRes].find((r) => r.error)?.error;
-      if (firstError) notifyError("cargar tus datos", firstError);
+      if (firstError) toast.error("No se pudieron cargar tus datos. Revisa tu conexión.");
       const gasolina = (gRes.data ?? []).map(rowToGas);
       const cargas = applyCalcs((cRes.data ?? []).map(rowToCarga), gasolina);
       setData((d) => ({
@@ -245,136 +258,156 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
-  const refreshCargas = useCallback((cargas: Carga[], gasolina: RegistroGasolina[]) => {
-    setData((d) => ({ ...d, cargas: applyCalcs(cargas, gasolina), gasolina }));
-  }, []);
-
   // ---------- CARGAS ----------
-  const addCarga = useCallback(async (c: any) => {
-    if (!user) return;
+  const addCarga = useCallback(async (c: any): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { data: row, error } = await supabase
       .from("cargas")
       .insert(cargaToRow(c, user.id))
       .select()
       .single();
-    if (error || !row) { notifyError("guardar la carga", error); return; }
+    if (error || !row) { notifySaveError(error); return false; }
     setData((d) => {
       const newCargas = [rowToCarga(row), ...d.cargas];
       return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
     });
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const updateCarga = useCallback(async (c: Carga) => {
-    if (!user) return;
+  const updateCarga = useCallback(async (c: Carga): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { error } = await supabase.from("cargas").update(cargaToRow(c, user.id)).eq("id", c.id);
-    if (error) { notifyError("actualizar la carga", error); return; }
+    if (error) { notifySaveError(error); return false; }
     setData((d) => {
       const newCargas = d.cargas.map((x) => (x.id === c.id ? { ...rowToCarga({ ...cargaToRow(c, user.id), id: c.id, created_at: c.createdAt }) } : x));
       return { ...d, cargas: applyCalcs(newCargas, d.gasolina) };
     });
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const deleteCarga = useCallback(async (id: string) => {
-    if (!user) return;
+  const deleteCarga = useCallback(async (id: string): Promise<boolean> => {
+    if (!user) return false;
     const { error } = await supabase.from("cargas").delete().eq("id", id);
-    if (error) { notifyError("eliminar la carga", error); return; }
+    if (error) { notifyDeleteError(error); return false; }
     setData((d) => {
       const newGas = d.gasolina.map((g) => (g.cargaId === id ? { ...g, cargaId: undefined } : g));
       const newCargas = d.cargas.filter((x) => x.id !== id);
       return { ...d, cargas: applyCalcs(newCargas, newGas), gasolina: newGas };
     });
+    notifyDeleteSuccess();
+    return true;
   }, [user]);
 
   // ---------- GASOLINA ----------
-  const addGasolina = useCallback(async (g: any) => {
-    if (!user) return;
+  const addGasolina = useCallback(async (g: any): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { data: row, error } = await supabase
       .from("gasolina")
       .insert(gasToRow(g, user.id))
       .select()
       .single();
-    if (error || !row) { notifyError("guardar la gasolina", error); return; }
+    if (error || !row) { notifySaveError(error); return false; }
     setData((d) => {
       const newGas = [rowToGas(row), ...d.gasolina];
       return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
     });
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const updateGasolina = useCallback(async (g: RegistroGasolina) => {
-    if (!user) return;
+  const updateGasolina = useCallback(async (g: RegistroGasolina): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { error } = await supabase.from("gasolina").update(gasToRow(g, user.id)).eq("id", g.id);
-    if (error) { notifyError("actualizar la gasolina", error); return; }
+    if (error) { notifySaveError(error); return false; }
     setData((d) => {
       const newGas = d.gasolina.map((x) => (x.id === g.id ? rowToGas({ ...gasToRow(g, user.id), id: g.id, created_at: g.createdAt }) : x));
       return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
     });
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const deleteGasolina = useCallback(async (id: string) => {
-    if (!user) return;
+  const deleteGasolina = useCallback(async (id: string): Promise<boolean> => {
+    if (!user) return false;
     const { error } = await supabase.from("gasolina").delete().eq("id", id);
-    if (error) { notifyError("eliminar la gasolina", error); return; }
+    if (error) { notifyDeleteError(error); return false; }
     setData((d) => {
       const newGas = d.gasolina.filter((x) => x.id !== id);
       return { ...d, gasolina: newGas, cargas: applyCalcs(d.cargas, newGas) };
     });
+    notifyDeleteSuccess();
+    return true;
   }, [user]);
 
   // ---------- PEAJES ----------
-  const addPeaje = useCallback(async (p: any) => {
-    if (!user) return;
+  const addPeaje = useCallback(async (p: any): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { data: row, error } = await supabase
       .from("peajes")
       .insert(peajeToRow(p, user.id))
       .select()
       .single();
-    if (error || !row) { notifyError("guardar el peaje", error); return; }
+    if (error || !row) { notifySaveError(error); return false; }
     setData((d) => ({ ...d, peajes: [rowToPeaje(row), ...d.peajes] }));
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const updatePeaje = useCallback(async (p: RegistroPeaje) => {
-    if (!user) return;
+  const updatePeaje = useCallback(async (p: RegistroPeaje): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { error } = await supabase.from("peajes").update(peajeToRow(p, user.id)).eq("id", p.id);
-    if (error) { notifyError("actualizar el peaje", error); return; }
+    if (error) { notifySaveError(error); return false; }
     setData((d) => ({ ...d, peajes: d.peajes.map((x) => (x.id === p.id ? p : x)) }));
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const deletePeaje = useCallback(async (id: string) => {
-    if (!user) return;
+  const deletePeaje = useCallback(async (id: string): Promise<boolean> => {
+    if (!user) return false;
     const { error } = await supabase.from("peajes").delete().eq("id", id);
-    if (error) { notifyError("eliminar el peaje", error); return; }
+    if (error) { notifyDeleteError(error); return false; }
     setData((d) => ({ ...d, peajes: d.peajes.filter((x) => x.id !== id) }));
+    notifyDeleteSuccess();
+    return true;
   }, [user]);
 
   // ---------- GASTOS VEHICULO ----------
-  const addGastoVehiculo = useCallback(async (g: Omit<GastoVehiculo, "id" | "createdAt">) => {
-    if (!user) return;
+  const addGastoVehiculo = useCallback(async (g: Omit<GastoVehiculo, "id" | "createdAt">): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { data: row, error } = await supabase
       .from("gastos_vehiculo" as any)
       .insert(gastoVehiculoToRow(g, user.id))
       .select()
       .single();
-    if (error || !row) { notifyError("guardar el gasto", error); return; }
+    if (error || !row) { notifySaveError(error); return false; }
     setData((d) => ({ ...d, gastosVehiculo: [rowToGastoVehiculo(row), ...d.gastosVehiculo] }));
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const updateGastoVehiculo = useCallback(async (g: GastoVehiculo) => {
-    if (!user) return;
+  const updateGastoVehiculo = useCallback(async (g: GastoVehiculo): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { error } = await supabase.from("gastos_vehiculo" as any).update(gastoVehiculoToRow(g, user.id)).eq("id", g.id);
-    if (error) { notifyError("actualizar el gasto", error); return; }
+    if (error) { notifySaveError(error); return false; }
     setData((d) => ({ ...d, gastosVehiculo: d.gastosVehiculo.map((x) => (x.id === g.id ? g : x)) }));
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
-  const deleteGastoVehiculo = useCallback(async (id: string) => {
-    if (!user) return;
+  const deleteGastoVehiculo = useCallback(async (id: string): Promise<boolean> => {
+    if (!user) return false;
     const { error } = await supabase.from("gastos_vehiculo" as any).delete().eq("id", id);
-    if (error) { notifyError("eliminar el gasto", error); return; }
+    if (error) { notifyDeleteError(error); return false; }
     setData((d) => ({ ...d, gastosVehiculo: d.gastosVehiculo.filter((x) => x.id !== id) }));
+    notifyDeleteSuccess();
+    return true;
   }, [user]);
 
   // ---------- METAS ----------
-  const setMeta = useCallback(async (m: Omit<Meta, "id">) => {
-    if (!user) return;
+  const setMeta = useCallback(async (m: Omit<Meta, "id">): Promise<boolean> => {
+    if (!user) { toast.error(SAVE_ERROR_MSG); return false; }
     const { data: row, error } = await supabase
       .from("metas")
       .upsert(
@@ -390,13 +423,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       )
       .select()
       .single();
-    if (error || !row) { notifyError("guardar la meta", error); return; }
+    if (error || !row) { notifySaveError(error); return false; }
     setData((d) => {
       const idx = d.metas.findIndex((x) => x.mes === m.mes);
       const newMeta = rowToMeta(row);
       const metas = idx >= 0 ? d.metas.map((x, i) => (i === idx ? newMeta : x)) : [...d.metas, newMeta];
       return { ...d, metas };
     });
+    notifySaveSuccess();
+    return true;
   }, [user]);
 
   const toggleDarkMode = useCallback(() => {
