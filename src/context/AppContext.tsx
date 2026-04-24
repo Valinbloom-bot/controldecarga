@@ -47,19 +47,34 @@ const AppContext = createContext<AppContextType | null>(null);
 const DARK_KEY = "control-cargas-dark";
 
 // ---------- mappers ----------
+function splitHora(v?: string | null): { inn: string; out: string } {
+  if (!v) return { inn: "", out: "" };
+  const parts = String(v).split("|");
+  return { inn: parts[0] ?? "", out: parts[1] ?? "" };
+}
+function joinHora(inn?: string, out?: string): string {
+  const i = inn ?? "";
+  const o = out ?? "";
+  return o ? `${i}|${o}` : i;
+}
+
 function rowToCarga(r: any): Carga {
   const millasVacias = Number(r.millas_vacias) || 0;
   const millasCargadas = Number(r.millas_cargadas) || 0;
   const millasTotal = millasVacias + millasCargadas;
   const pagoRecibido = Number(r.pago_recibido) || 0;
   const costoGasolina = Number(r.costo_gasolina) || 0;
+  const hr = splitHora(r.hora_recogida);
+  const he = splitHora(r.hora_entrega);
   return {
     id: r.id,
     fechaRecogida: r.fecha_recogida ?? "",
-    horaRecogida: r.hora_recogida ?? "",
+    horaRecogida: hr.inn,
+    horaSalidaRecogida: hr.out,
     ubicacionRecogida: r.ubicacion_recogida ?? "",
     fechaEntrega: r.fecha_entrega ?? "",
-    horaEntrega: r.hora_entrega ?? "",
+    horaEntrega: he.inn,
+    horaSalidaEntrega: he.out,
     ubicacionEntrega: r.ubicacion_entrega ?? "",
     millasVacias,
     millasCargadas,
@@ -82,10 +97,10 @@ function cargaToRow(c: Partial<Carga>, userId: string) {
   return {
     user_id: userId,
     fecha_recogida: c.fechaRecogida,
-    hora_recogida: c.horaRecogida,
+    hora_recogida: joinHora(c.horaRecogida, c.horaSalidaRecogida),
     ubicacion_recogida: c.ubicacionRecogida,
     fecha_entrega: c.fechaEntrega,
-    hora_entrega: c.horaEntrega,
+    hora_entrega: joinHora(c.horaEntrega, c.horaSalidaEntrega),
     ubicacion_entrega: c.ubicacionEntrega,
     millas_vacias: c.millasVacias ?? 0,
     millas_cargadas: c.millasCargadas ?? 0,

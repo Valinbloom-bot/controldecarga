@@ -22,11 +22,14 @@ import UsageBanner from "@/components/UsageBanner";
 const emptyForm = {
   fechaRecogida: format(new Date(), "yyyy-MM-dd"),
   horaRecogida: format(new Date(), "HH:mm"),
+  horaSalidaRecogida: "",
   ubicacionRecogida: "",
   fechaEntrega: format(new Date(), "yyyy-MM-dd"),
   horaEntrega: "",
+  horaSalidaEntrega: "",
   ubicacionEntrega: "",
-  millasTotal: 0,
+  millasVacias: 0,
+  millasCargadas: 0,
   pagoRecibido: 0,
   costoGasolina: 0,
   peajes: 0,
@@ -57,11 +60,14 @@ export default function RegistroCarga() {
       setForm({
         fechaRecogida: carga.fechaRecogida,
         horaRecogida: carga.horaRecogida,
+        horaSalidaRecogida: carga.horaSalidaRecogida ?? "",
         ubicacionRecogida: carga.ubicacionRecogida,
         fechaEntrega: carga.fechaEntrega,
         horaEntrega: carga.horaEntrega,
+        horaSalidaEntrega: carga.horaSalidaEntrega ?? "",
         ubicacionEntrega: carga.ubicacionEntrega,
-        millasTotal: carga.millasTotal,
+        millasVacias: carga.millasVacias || 0,
+        millasCargadas: carga.millasCargadas || 0,
         pagoRecibido: carga.pagoRecibido,
         costoGasolina: carga.costoGasolina,
         peajes: 0,
@@ -79,6 +85,8 @@ export default function RegistroCarga() {
     setOpen(true);
   };
 
+  const millasTotalCalc = (form.millasVacias || 0) + (form.millasCargadas || 0);
+
   const handleSave = async () => {
     if (saving) return;
     if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
@@ -93,8 +101,8 @@ export default function RegistroCarga() {
       toast.error("Ingresa fecha y hora de entrega");
       return;
     }
-    if (!form.millasTotal || form.millasTotal <= 0) {
-      toast.error("Ingresa millas totales");
+    if (millasTotalCalc <= 0) {
+      toast.error("Ingresa millas (vacías o cargadas)");
       return;
     }
     if (!form.pagoRecibido || form.pagoRecibido <= 0) {
@@ -106,12 +114,14 @@ export default function RegistroCarga() {
     const payload = {
       fechaRecogida: form.fechaRecogida,
       horaRecogida: form.horaRecogida,
+      horaSalidaRecogida: form.horaSalidaRecogida,
       ubicacionRecogida: form.ubicacionRecogida,
       fechaEntrega: form.fechaEntrega,
       horaEntrega: form.horaEntrega,
+      horaSalidaEntrega: form.horaSalidaEntrega,
       ubicacionEntrega: form.ubicacionEntrega,
-      millasVacias: 0,
-      millasCargadas: form.millasTotal,
+      millasVacias: form.millasVacias || 0,
+      millasCargadas: form.millasCargadas || 0,
       pagoRecibido: form.pagoRecibido,
       costoGasolina: form.costoGasolina,
       gastosComida: 0,
@@ -158,7 +168,7 @@ export default function RegistroCarga() {
   const effectiveGasCost = linkedGasCost > 0 ? linkedGasCost : (form.costoGasolina || 0);
   const totalGastos = effectiveGasCost + (form.peajes || 0) + (overnight ? (form.hospedaje || 0) : 0);
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
-  const gananciaPorMilla = form.millasTotal > 0 ? gananciaNeta / form.millasTotal : 0;
+  const gananciaPorMilla = millasTotalCalc > 0 ? gananciaNeta / millasTotalCalc : 0;
 
   // Trip duration in hours
   const duracionHoras = (() => {
@@ -212,19 +222,33 @@ export default function RegistroCarga() {
                     placeholder="Ciudad, Estado"
                     autoFocus
                   />
-                  <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="pt-1">
                     <Input
                       className="h-12 text-base"
                       type="date"
                       value={form.fechaRecogida}
                       onChange={e => setField("fechaRecogida", e.target.value)}
                     />
-                    <Input
-                      className="h-12 text-base"
-                      type="time"
-                      value={form.horaRecogida}
-                      onChange={e => setField("horaRecogida", e.target.value)}
-                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Check-in</Label>
+                      <Input
+                        className="h-12 text-base"
+                        type="time"
+                        value={form.horaRecogida}
+                        onChange={e => setField("horaRecogida", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Check-out</Label>
+                      <Input
+                        className="h-12 text-base"
+                        type="time"
+                        value={form.horaSalidaRecogida}
+                        onChange={e => setField("horaSalidaRecogida", e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -236,45 +260,85 @@ export default function RegistroCarga() {
                     onChange={e => setField("ubicacionEntrega", e.target.value)}
                     placeholder="Ciudad, Estado"
                   />
-                  <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="pt-1">
                     <Input
                       className="h-12 text-base"
                       type="date"
                       value={form.fechaEntrega}
                       onChange={e => setField("fechaEntrega", e.target.value)}
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Check-in</Label>
+                      <Input
+                        className="h-12 text-base"
+                        type="time"
+                        value={form.horaEntrega}
+                        onChange={e => setField("horaEntrega", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Check-out</Label>
+                      <Input
+                        className="h-12 text-base"
+                        type="time"
+                        value={form.horaSalidaEntrega}
+                        onChange={e => setField("horaSalidaEntrega", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mileage - three fields with auto-total */}
+                <div className="space-y-2">
+                  <Label className="text-base">Millas *</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Vacías (DH)</Label>
+                      <Input
+                        className="h-12 text-base"
+                        type="number"
+                        inputMode="numeric"
+                        value={form.millasVacias || ""}
+                        onChange={e => numField("millasVacias", e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Cargadas</Label>
+                      <Input
+                        className="h-12 text-base"
+                        type="number"
+                        inputMode="numeric"
+                        value={form.millasCargadas || ""}
+                        onChange={e => numField("millasCargadas", e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Totales (auto)</Label>
                     <Input
-                      className="h-12 text-base"
-                      type="time"
-                      value={form.horaEntrega}
-                      onChange={e => setField("horaEntrega", e.target.value)}
+                      className="h-12 text-base bg-muted"
+                      type="number"
+                      value={millasTotalCalc || ""}
+                      readOnly
+                      placeholder="0"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-base">Millas *</Label>
-                    <Input
-                      className="h-12 text-base"
-                      type="number"
-                      inputMode="numeric"
-                      value={form.millasTotal || ""}
-                      onChange={e => numField("millasTotal", e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-base">Pago $ *</Label>
-                    <Input
-                      className="h-12 text-base"
-                      type="number"
-                      inputMode="decimal"
-                      value={form.pagoRecibido || ""}
-                      onChange={e => numField("pagoRecibido", e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-base">Pago $ *</Label>
+                  <Input
+                    className="h-12 text-base"
+                    type="number"
+                    inputMode="decimal"
+                    value={form.pagoRecibido || ""}
+                    onChange={e => numField("pagoRecibido", e.target.value)}
+                    placeholder="0"
+                  />
                 </div>
 
                 {/* Overnight toggle */}

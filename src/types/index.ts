@@ -1,10 +1,12 @@
 export interface Carga {
   id: string;
   fechaRecogida: string;
-  horaRecogida: string;
+  horaRecogida: string; // check-in time at pickup
+  horaSalidaRecogida?: string; // check-out time at pickup
   ubicacionRecogida: string;
   fechaEntrega: string;
-  horaEntrega: string;
+  horaEntrega: string; // check-in time at delivery
+  horaSalidaEntrega?: string; // check-out time at delivery
   ubicacionEntrega: string;
   millasVacias: number;
   millasCargadas: number;
@@ -65,6 +67,7 @@ export const CATEGORIAS_GASTO_VEHICULO = [
   "Seguro",
   "Registro/Permisos",
   "Reparaciones",
+  "Pago del Vehículo",
   "Otros",
 ] as const;
 
