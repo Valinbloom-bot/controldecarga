@@ -194,8 +194,8 @@ export default function RegistroCarga() {
   // Trip duration in hours
   const duracionHoras = (() => {
     if (!form.fechaRecogida || !form.horaRecogida || !form.fechaEntrega || !form.horaEntrega) return 0;
-    const start = new Date(`${form.fechaRecogida}T${form.horaRecogida}`);
-    const end = new Date(`${form.fechaEntrega}T${form.horaEntrega}`);
+    const start = new Date(`${form.fechaRecogida}T${parseTime(form.horaRecogida).time}`);
+    const end = new Date(`${form.fechaEntrega}T${parseTime(form.horaEntrega).time}`);
     const diff = (end.getTime() - start.getTime()) / 3600000;
     return diff > 0 ? diff : 0;
   })();
