@@ -42,7 +42,7 @@ import UsageBanner from "@/components/UsageBanner";
 
 const emptyForm = {
   fechaRecogida: format(new Date(), "yyyy-MM-dd"),
-  horaRecogida: format(new Date(), "HH:mm"),
+  horaRecogida: `${format(new Date(), "HH:mm")} ET`,
   horaSalidaRecogida: "",
   ubicacionRecogida: "",
   fechaEntrega: format(new Date(), "yyyy-MM-dd"),
