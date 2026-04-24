@@ -129,45 +129,6 @@ export default function RegistroCarga() {
       otrosGastos: 0,
       notas: form.notas,
     };
-    if (saving) return;
-    if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
-      toast.error("Completa recogida y entrega");
-      return;
-    }
-    if (!form.fechaRecogida || !form.horaRecogida) {
-      toast.error("Ingresa fecha y hora de recogida");
-      return;
-    }
-    if (!form.fechaEntrega || !form.horaEntrega) {
-      toast.error("Ingresa fecha y hora de entrega");
-      return;
-    }
-    if (!form.millasTotal || form.millasTotal <= 0) {
-      toast.error("Ingresa millas totales");
-      return;
-    }
-    if (!form.pagoRecibido || form.pagoRecibido <= 0) {
-      toast.error("Ingresa el pago recibido");
-      return;
-    }
-
-    const today = format(new Date(), "yyyy-MM-dd");
-    const payload = {
-      fechaRecogida: form.fechaRecogida,
-      horaRecogida: form.horaRecogida,
-      ubicacionRecogida: form.ubicacionRecogida,
-      fechaEntrega: form.fechaEntrega,
-      horaEntrega: form.horaEntrega,
-      ubicacionEntrega: form.ubicacionEntrega,
-      millasVacias: 0,
-      millasCargadas: form.millasTotal,
-      pagoRecibido: form.pagoRecibido,
-      costoGasolina: form.costoGasolina,
-      gastosComida: 0,
-      hospedaje: overnight ? form.hospedaje : 0,
-      otrosGastos: 0,
-      notas: form.notas,
-    };
 
     setSaving(true);
     let ok = false;
@@ -207,7 +168,7 @@ export default function RegistroCarga() {
   const effectiveGasCost = linkedGasCost > 0 ? linkedGasCost : (form.costoGasolina || 0);
   const totalGastos = effectiveGasCost + (form.peajes || 0) + (overnight ? (form.hospedaje || 0) : 0);
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
-  const gananciaPorMilla = form.millasTotal > 0 ? gananciaNeta / form.millasTotal : 0;
+  const gananciaPorMilla = millasTotalCalc > 0 ? gananciaNeta / millasTotalCalc : 0;
 
   // Trip duration in hours
   const duracionHoras = (() => {
