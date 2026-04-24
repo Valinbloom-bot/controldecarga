@@ -304,21 +304,33 @@ export default function RegistroCarga() {
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Check-in</Label>
-                      <Input
-                        className="h-12 text-base"
-                        type="time"
-                        value={form.horaEntrega}
-                        onChange={e => setField("horaEntrega", e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          className="h-12 text-base flex-1 min-w-0"
+                          type="time"
+                          value={parseTime(form.horaEntrega).time}
+                          onChange={e => setField("horaEntrega", buildTime(e.target.value, parseTime(form.horaEntrega).tz))}
+                        />
+                        <Select value={parseTime(form.horaEntrega).tz} onValueChange={(v) => setField("horaEntrega", buildTime(parseTime(form.horaEntrega).time, v))}>
+                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Check-out</Label>
-                      <Input
-                        className="h-12 text-base"
-                        type="time"
-                        value={form.horaSalidaEntrega}
-                        onChange={e => setField("horaSalidaEntrega", e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          className="h-12 text-base flex-1 min-w-0"
+                          type="time"
+                          value={parseTime(form.horaSalidaEntrega).time}
+                          onChange={e => setField("horaSalidaEntrega", buildTime(e.target.value, parseTime(form.horaSalidaEntrega).tz))}
+                        />
+                        <Select value={parseTime(form.horaSalidaEntrega).tz} onValueChange={(v) => setField("horaSalidaEntrega", buildTime(parseTime(form.horaSalidaEntrega).time, v))}>
+                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
