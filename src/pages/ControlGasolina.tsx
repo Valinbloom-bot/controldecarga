@@ -17,7 +17,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Link2 } from "lucide-react";
 import { format } from "date-fns";
 
-const nowTime = () => format(new Date(), "HH:mm");
+const TIMEZONES = [
+  { value: "ET", label: "ET - Eastern" },
+  { value: "CT", label: "CT - Central" },
+  { value: "MT", label: "MT - Mountain" },
+  { value: "PT", label: "PT - Pacific" },
+  { value: "AT", label: "AT - Alaska" },
+  { value: "HT", label: "HT - Hawaii" },
+] as const;
+
+// Time stored as "HH:mm TZ" (e.g. "08:00 ET"); split for UI
+function parseTime(v?: string): { time: string; tz: string } {
+  if (!v) return { time: "", tz: "ET" };
+  const [time, tz] = v.split(" ");
+  return { time: time ?? "", tz: tz || "ET" };
+}
+function buildTime(time: string, tz: string): string {
+  if (!time) return "";
+  return `${time} ${tz || "ET"}`;
+}
+
+const nowTime = () => `${format(new Date(), "HH:mm")} ET`;
 
 const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),
@@ -103,7 +123,27 @@ export default function ControlGasolina() {
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
-                  <div><Label>Hora</Label><Input type="time" value={form.hora} onChange={e => setField("hora", e.target.value)} /></div>
+                  <div>
+                    <Label>Hora</Label>
+                    <div className="flex gap-1">
+                      <Input
+                        type="time"
+                        value={parseTime(form.hora).time}
+                        onChange={e => setField("hora", buildTime(e.target.value, parseTime(form.hora).tz))}
+                      />
+                      <Select
+                        value={parseTime(form.hora).tz}
+                        onValueChange={tz => setField("hora", buildTime(parseTime(form.hora).time, tz))}
+                      >
+                        <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {TIMEZONES.map(tz => (
+                            <SelectItem key={tz.value} value={tz.value}>{tz.value}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
                 <div><Label>Gasolinera</Label><Input value={form.gasolinera} onChange={e => setField("gasolinera", e.target.value)} placeholder="Nombre" /></div>
                 <div><Label>Ubicación</Label><Input value={form.ubicacion} onChange={e => setField("ubicacion", e.target.value)} placeholder="Ciudad, Estado" /></div>
