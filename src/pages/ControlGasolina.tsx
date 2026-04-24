@@ -17,7 +17,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil, Trash2, Link2 } from "lucide-react";
 import { format } from "date-fns";
 
-const nowTime = () => format(new Date(), "HH:mm");
+const TIMEZONES = [
+  { value: "ET", label: "ET - Eastern" },
+  { value: "CT", label: "CT - Central" },
+  { value: "MT", label: "MT - Mountain" },
+  { value: "PT", label: "PT - Pacific" },
+  { value: "AT", label: "AT - Alaska" },
+  { value: "HT", label: "HT - Hawaii" },
+] as const;
+
+// Time stored as "HH:mm TZ" (e.g. "08:00 ET"); split for UI
+function parseTime(v?: string): { time: string; tz: string } {
+  if (!v) return { time: "", tz: "ET" };
+  const [time, tz] = v.split(" ");
+  return { time: time ?? "", tz: tz || "ET" };
+}
+function buildTime(time: string, tz: string): string {
+  if (!time) return "";
+  return `${time} ${tz || "ET"}`;
+}
+
+const nowTime = () => `${format(new Date(), "HH:mm")} ET`;
 
 const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),
