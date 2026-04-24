@@ -12,7 +12,28 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Fuel, Moon } from "lucide-react";
+
+const TIMEZONES = [
+  { value: "ET", label: "ET - Eastern" },
+  { value: "CT", label: "CT - Central" },
+  { value: "MT", label: "MT - Mountain" },
+  { value: "PT", label: "PT - Pacific" },
+  { value: "AT", label: "AT - Alaska" },
+  { value: "HT", label: "HT - Hawaii" },
+] as const;
+
+// Time stored as "HH:mm TZ" (e.g. "08:00 ET"); split for UI
+function parseTime(v?: string): { time: string; tz: string } {
+  if (!v) return { time: "", tz: "ET" };
+  const [time, tz] = v.split(" ");
+  return { time: time ?? "", tz: tz || "ET" };
+}
+function buildTime(time: string, tz: string): string {
+  if (!time) return "";
+  return `${time} ${tz || "ET"}`;
+}
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +42,7 @@ import UsageBanner from "@/components/UsageBanner";
 
 const emptyForm = {
   fechaRecogida: format(new Date(), "yyyy-MM-dd"),
-  horaRecogida: format(new Date(), "HH:mm"),
+  horaRecogida: `${format(new Date(), "HH:mm")} ET`,
   horaSalidaRecogida: "",
   ubicacionRecogida: "",
   fechaEntrega: format(new Date(), "yyyy-MM-dd"),
@@ -173,8 +194,8 @@ export default function RegistroCarga() {
   // Trip duration in hours
   const duracionHoras = (() => {
     if (!form.fechaRecogida || !form.horaRecogida || !form.fechaEntrega || !form.horaEntrega) return 0;
-    const start = new Date(`${form.fechaRecogida}T${form.horaRecogida}`);
-    const end = new Date(`${form.fechaEntrega}T${form.horaEntrega}`);
+    const start = new Date(`${form.fechaRecogida}T${parseTime(form.horaRecogida).time}`);
+    const end = new Date(`${form.fechaEntrega}T${parseTime(form.horaEntrega).time}`);
     const diff = (end.getTime() - start.getTime()) / 3600000;
     return diff > 0 ? diff : 0;
   })();
@@ -233,21 +254,33 @@ export default function RegistroCarga() {
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Check-in</Label>
-                      <Input
-                        className="h-12 text-base"
-                        type="time"
-                        value={form.horaRecogida}
-                        onChange={e => setField("horaRecogida", e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          className="h-12 text-base flex-1 min-w-0"
+                          type="time"
+                          value={parseTime(form.horaRecogida).time}
+                          onChange={e => setField("horaRecogida", buildTime(e.target.value, parseTime(form.horaRecogida).tz))}
+                        />
+                        <Select value={parseTime(form.horaRecogida).tz} onValueChange={(v) => setField("horaRecogida", buildTime(parseTime(form.horaRecogida).time, v))}>
+                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Check-out</Label>
-                      <Input
-                        className="h-12 text-base"
-                        type="time"
-                        value={form.horaSalidaRecogida}
-                        onChange={e => setField("horaSalidaRecogida", e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          className="h-12 text-base flex-1 min-w-0"
+                          type="time"
+                          value={parseTime(form.horaSalidaRecogida).time}
+                          onChange={e => setField("horaSalidaRecogida", buildTime(e.target.value, parseTime(form.horaSalidaRecogida).tz))}
+                        />
+                        <Select value={parseTime(form.horaSalidaRecogida).tz} onValueChange={(v) => setField("horaSalidaRecogida", buildTime(parseTime(form.horaSalidaRecogida).time, v))}>
+                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -271,21 +304,33 @@ export default function RegistroCarga() {
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Check-in</Label>
-                      <Input
-                        className="h-12 text-base"
-                        type="time"
-                        value={form.horaEntrega}
-                        onChange={e => setField("horaEntrega", e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          className="h-12 text-base flex-1 min-w-0"
+                          type="time"
+                          value={parseTime(form.horaEntrega).time}
+                          onChange={e => setField("horaEntrega", buildTime(e.target.value, parseTime(form.horaEntrega).tz))}
+                        />
+                        <Select value={parseTime(form.horaEntrega).tz} onValueChange={(v) => setField("horaEntrega", buildTime(parseTime(form.horaEntrega).time, v))}>
+                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Check-out</Label>
-                      <Input
-                        className="h-12 text-base"
-                        type="time"
-                        value={form.horaSalidaEntrega}
-                        onChange={e => setField("horaSalidaEntrega", e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          className="h-12 text-base flex-1 min-w-0"
+                          type="time"
+                          value={parseTime(form.horaSalidaEntrega).time}
+                          onChange={e => setField("horaSalidaEntrega", buildTime(e.target.value, parseTime(form.horaSalidaEntrega).tz))}
+                        />
+                        <Select value={parseTime(form.horaSalidaEntrega).tz} onValueChange={(v) => setField("horaSalidaEntrega", buildTime(parseTime(form.horaSalidaEntrega).time, v))}>
+                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
