@@ -12,7 +12,28 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Fuel, Moon } from "lucide-react";
+
+const TIMEZONES = [
+  { value: "ET", label: "ET - Eastern" },
+  { value: "CT", label: "CT - Central" },
+  { value: "MT", label: "MT - Mountain" },
+  { value: "PT", label: "PT - Pacific" },
+  { value: "AT", label: "AT - Alaska" },
+  { value: "HT", label: "HT - Hawaii" },
+] as const;
+
+// Time stored as "HH:mm TZ" (e.g. "08:00 ET"); split for UI
+function parseTime(v?: string): { time: string; tz: string } {
+  if (!v) return { time: "", tz: "ET" };
+  const [time, tz] = v.split(" ");
+  return { time: time ?? "", tz: tz || "ET" };
+}
+function buildTime(time: string, tz: string): string {
+  if (!time) return "";
+  return `${time} ${tz || "ET"}`;
+}
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
