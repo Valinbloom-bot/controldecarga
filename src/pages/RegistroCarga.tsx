@@ -22,11 +22,14 @@ import UsageBanner from "@/components/UsageBanner";
 const emptyForm = {
   fechaRecogida: format(new Date(), "yyyy-MM-dd"),
   horaRecogida: format(new Date(), "HH:mm"),
+  horaSalidaRecogida: "",
   ubicacionRecogida: "",
   fechaEntrega: format(new Date(), "yyyy-MM-dd"),
   horaEntrega: "",
+  horaSalidaEntrega: "",
   ubicacionEntrega: "",
-  millasTotal: 0,
+  millasVacias: 0,
+  millasCargadas: 0,
   pagoRecibido: 0,
   costoGasolina: 0,
   peajes: 0,
@@ -57,11 +60,14 @@ export default function RegistroCarga() {
       setForm({
         fechaRecogida: carga.fechaRecogida,
         horaRecogida: carga.horaRecogida,
+        horaSalidaRecogida: carga.horaSalidaRecogida ?? "",
         ubicacionRecogida: carga.ubicacionRecogida,
         fechaEntrega: carga.fechaEntrega,
         horaEntrega: carga.horaEntrega,
+        horaSalidaEntrega: carga.horaSalidaEntrega ?? "",
         ubicacionEntrega: carga.ubicacionEntrega,
-        millasTotal: carga.millasTotal,
+        millasVacias: carga.millasVacias || 0,
+        millasCargadas: carga.millasCargadas || 0,
         pagoRecibido: carga.pagoRecibido,
         costoGasolina: carga.costoGasolina,
         peajes: 0,
@@ -79,7 +85,50 @@ export default function RegistroCarga() {
     setOpen(true);
   };
 
+  const millasTotalCalc = (form.millasVacias || 0) + (form.millasCargadas || 0);
+
   const handleSave = async () => {
+    if (saving) return;
+    if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
+      toast.error("Completa recogida y entrega");
+      return;
+    }
+    if (!form.fechaRecogida || !form.horaRecogida) {
+      toast.error("Ingresa fecha y hora de recogida");
+      return;
+    }
+    if (!form.fechaEntrega || !form.horaEntrega) {
+      toast.error("Ingresa fecha y hora de entrega");
+      return;
+    }
+    if (millasTotalCalc <= 0) {
+      toast.error("Ingresa millas (vacías o cargadas)");
+      return;
+    }
+    if (!form.pagoRecibido || form.pagoRecibido <= 0) {
+      toast.error("Ingresa el pago recibido");
+      return;
+    }
+
+    const today = format(new Date(), "yyyy-MM-dd");
+    const payload = {
+      fechaRecogida: form.fechaRecogida,
+      horaRecogida: form.horaRecogida,
+      horaSalidaRecogida: form.horaSalidaRecogida,
+      ubicacionRecogida: form.ubicacionRecogida,
+      fechaEntrega: form.fechaEntrega,
+      horaEntrega: form.horaEntrega,
+      horaSalidaEntrega: form.horaSalidaEntrega,
+      ubicacionEntrega: form.ubicacionEntrega,
+      millasVacias: form.millasVacias || 0,
+      millasCargadas: form.millasCargadas || 0,
+      pagoRecibido: form.pagoRecibido,
+      costoGasolina: form.costoGasolina,
+      gastosComida: 0,
+      hospedaje: overnight ? form.hospedaje : 0,
+      otrosGastos: 0,
+      notas: form.notas,
+    };
     if (saving) return;
     if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
       toast.error("Completa recogida y entrega");
