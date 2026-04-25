@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Truck, Loader2, CheckCircle2, Mail } from "lucide-react";
+import { Loader2, CheckCircle2, Mail } from "lucide-react";
 import { getPostLoginPath } from "@/lib/vip-access";
+import loadnestLogo from "@/assets/loadnest-logo.png";
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -159,9 +160,11 @@ export default function Auth() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-3">
-            <Truck className="w-8 h-8" />
-          </div>
+          <img
+            src={loadnestLogo}
+            alt="LoadNest"
+            className="w-20 h-20 rounded-2xl mb-3 shadow-lg"
+          />
           <h1 className="text-2xl font-bold">LoadNest</h1>
           <p className="text-sm text-muted-foreground">Run your business on the road</p>
         </div>
