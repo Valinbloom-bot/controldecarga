@@ -9,11 +9,6 @@ function daysUntil(iso: string | null): number | null {
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
-/**
- * - Trialing: shows "X días de prueba"
- * - Free (no access): shows upgrade chip
- * - Active paid/comp/admin: nothing
- */
 export default function TrialBadge() {
   const { subscription, isActive, isTrialing, accessMode, loading } = useAccessStatus();
   if (loading) return null;
@@ -27,7 +22,7 @@ export default function TrialBadge() {
         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-semibold"
       >
         <Clock className="w-3 h-3" />
-        {days === 0 ? "Prueba termina hoy" : `${days} día${days === 1 ? "" : "s"} de prueba`}
+        {days === 0 ? "Trial ends today" : `${days} day${days === 1 ? "" : "s"} left`}
       </Link>
     );
   }
@@ -38,7 +33,7 @@ export default function TrialBadge() {
         to="/precios"
         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold"
       >
-        <Sparkles className="w-3 h-3" /> Prueba gratis
+        <Sparkles className="w-3 h-3" /> Free trial
       </Link>
     );
   }
