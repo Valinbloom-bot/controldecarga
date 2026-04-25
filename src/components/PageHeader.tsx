@@ -28,7 +28,7 @@ export default function PageHeader({ title, action }: PageHeaderProps) {
           <DropdownMenuTrigger asChild>
             <button
               className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold active:scale-95 transition-transform"
-              aria-label="Cuenta"
+              aria-label="Account"
             >
               {initial}
             </button>
@@ -36,14 +36,14 @@ export default function PageHeader({ title, action }: PageHeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="font-medium">{displayName || "Usuario"}</span>
+                <span className="font-medium">{displayName || "User"}</span>
                 <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive">
               <LogOut className="w-4 h-4 mr-2" />
-              Cerrar sesión
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
