@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon } from "lucide-react";
+import loadnestLogo from "@/assets/loadnest-logo.png";
 
 interface PageHeaderProps {
   title: string;
@@ -21,7 +22,10 @@ export default function PageHeader({ title, action }: PageHeaderProps) {
 
   return (
     <div className="flex items-center justify-between px-4 pt-4 pb-2 gap-2">
-      <h1 className="text-xl font-bold tracking-tight flex-1 truncate">{title}</h1>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <img src={loadnestLogo} alt="LoadNest" className="w-8 h-8 rounded-lg flex-shrink-0" />
+        <h1 className="text-xl font-bold tracking-tight truncate">{title}</h1>
+      </div>
       <div className="flex items-center gap-2">
         {action}
         <DropdownMenu>
