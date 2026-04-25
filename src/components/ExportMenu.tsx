@@ -27,7 +27,7 @@ export default function ExportMenu<T>({
   getDate,
   onCSV,
   onPDF,
-  emptyMessage = "No hay datos para exportar",
+  emptyMessage = "No data to export",
 }: ExportMenuProps<T>) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState("");
@@ -45,16 +45,16 @@ export default function ExportMenu<T>({
 
   const run = (fn: (f: T[]) => void) => {
     if (filtered.length === 0) {
-      toast.error(items.length === 0 ? emptyMessage : "No hay registros en el rango seleccionado");
+      toast.error(items.length === 0 ? emptyMessage : "No records in the selected range");
       return;
     }
     try {
       fn(filtered);
-      toast.success(`Exportación lista (${filtered.length} registro${filtered.length === 1 ? "" : "s"})`);
+      toast.success(`Export ready (${filtered.length} record${filtered.length === 1 ? "" : "s"})`);
       setOpen(false);
     } catch (e) {
       console.error(e);
-      toast.error("Error al exportar");
+      toast.error("Export failed");
     }
   };
 
@@ -64,32 +64,32 @@ export default function ExportMenu<T>({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          <Download className="w-4 h-4 mr-1" /> Exportar
+          <Download className="w-4 h-4 mr-1" /> Export
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Exportar datos</DialogTitle>
+          <DialogTitle>Export data</DialogTitle>
           <DialogDescription>
-            Filtra por rango de fechas (opcional) y elige el formato.
+            Filter by date range (optional) and choose a format.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Desde</Label>
+              <Label className="text-xs">From</Label>
               <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Hasta</Label>
+              <Label className="text-xs">To</Label>
               <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{filtered.length} de {items.length} registro{items.length === 1 ? "" : "s"}</span>
+            <span>{filtered.length} of {items.length} record{items.length === 1 ? "" : "s"}</span>
             {(from || to) && (
               <button type="button" className="underline" onClick={clearRange}>
-                Limpiar
+                Clear
               </button>
             )}
           </div>
