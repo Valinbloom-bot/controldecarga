@@ -24,7 +24,6 @@ const TIMEZONES = [
   { value: "HT", label: "HT - Hawaii" },
 ] as const;
 
-// Time stored as "HH:mm TZ" (e.g. "08:00 ET"); split for UI
 function parseTime(v?: string): { time: string; tz: string } {
   if (!v) return { time: "", tz: "ET" };
   const [time, tz] = v.split(" ");
@@ -72,7 +71,7 @@ export default function RegistroCarga() {
 
   const handleOpen = (carga?: Carga) => {
     if (!carga && blocked) {
-      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
+      toast.info("You hit the free limit. Start your trial to log more.");
       navigate("/precios");
       return;
     }
@@ -111,23 +110,23 @@ export default function RegistroCarga() {
   const handleSave = async () => {
     if (saving) return;
     if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
-      toast.error("Completa recogida y entrega");
+      toast.error("Complete pickup and delivery");
       return;
     }
     if (!form.fechaRecogida || !form.horaRecogida) {
-      toast.error("Ingresa fecha y hora de recogida");
+      toast.error("Enter pickup date and time");
       return;
     }
     if (!form.fechaEntrega || !form.horaEntrega) {
-      toast.error("Ingresa fecha y hora de entrega");
+      toast.error("Enter delivery date and time");
       return;
     }
     if (millasTotalCalc <= 0) {
-      toast.error("Ingresa millas (vacías o cargadas)");
+      toast.error("Enter miles (deadhead or loaded)");
       return;
     }
     if (!form.pagoRecibido || form.pagoRecibido <= 0) {
-      toast.error("Ingresa el pago recibido");
+      toast.error("Enter the payment received");
       return;
     }
 
@@ -163,7 +162,7 @@ export default function RegistroCarga() {
           ubicacionCarretera: `${form.ubicacionRecogida} → ${form.ubicacionEntrega}`,
           monto: form.peajes,
           metodoPago: "",
-          notas: "Auto-registrado desde carga",
+          notas: "Auto-logged from load",
         });
       }
     }
@@ -191,7 +190,6 @@ export default function RegistroCarga() {
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
   const gananciaPorMilla = millasTotalCalc > 0 ? gananciaNeta / millasTotalCalc : 0;
 
-  // Trip duration in hours
   const duracionHoras = (() => {
     if (!form.fechaRecogida || !form.horaRecogida || !form.fechaEntrega || !form.horaEntrega) return 0;
     const start = new Date(`${form.fechaRecogida}T${parseTime(form.horaRecogida).time}`);
@@ -212,7 +210,7 @@ export default function RegistroCarga() {
   return (
     <div className="pb-20">
       <PageHeader
-        title="Registro de Carga"
+        title="Loads"
         action={
           <>
           <ExportMenu
@@ -220,27 +218,26 @@ export default function RegistroCarga() {
             getDate={(c) => c.fechaRecogida}
             onCSV={(f) => exportCargasCSV(f)}
             onPDF={(f) => exportCargasPDF(f)}
-            emptyMessage="No hay cargas"
+            emptyMessage="No loads"
           />
           <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}>
-                <Plus className="w-4 h-4 mr-1" /> Nueva
+                <Plus className="w-4 h-4 mr-1" /> New
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[92vh] overflow-y-auto max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
               <DialogHeader>
-                <DialogTitle>{editing ? "Editar Carga" : "Nueva Carga"}</DialogTitle>
+                <DialogTitle>{editing ? "Edit Load" : "New Load"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                {/* Required fields - big and tappable */}
                 <div className="space-y-1.5">
-                  <Label className="text-base">Recogida *</Label>
+                  <Label className="text-base">Pickup *</Label>
                   <Input
                     className="h-12 text-base"
                     value={form.ubicacionRecogida}
                     onChange={e => setField("ubicacionRecogida", e.target.value)}
-                    placeholder="Ciudad, Estado"
+                    placeholder="City, State"
                     autoFocus
                   />
                   <div className="pt-1">
@@ -286,12 +283,12 @@ export default function RegistroCarga() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-base">Entrega *</Label>
+                  <Label className="text-base">Delivery *</Label>
                   <Input
                     className="h-12 text-base"
                     value={form.ubicacionEntrega}
                     onChange={e => setField("ubicacionEntrega", e.target.value)}
-                    placeholder="Ciudad, Estado"
+                    placeholder="City, State"
                   />
                   <div className="pt-1">
                     <Input
@@ -335,12 +332,11 @@ export default function RegistroCarga() {
                   </div>
                 </div>
 
-                {/* Mileage - three fields with auto-total */}
                 <div className="space-y-2">
-                  <Label className="text-base">Millas *</Label>
+                  <Label className="text-base">Miles *</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Vacías (DH)</Label>
+                      <Label className="text-xs text-muted-foreground">Deadhead (DH)</Label>
                       <Input
                         className="h-12 text-base"
                         type="number"
@@ -351,7 +347,7 @@ export default function RegistroCarga() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Cargadas</Label>
+                      <Label className="text-xs text-muted-foreground">Loaded</Label>
                       <Input
                         className="h-12 text-base"
                         type="number"
@@ -363,7 +359,7 @@ export default function RegistroCarga() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Totales (auto)</Label>
+                    <Label className="text-xs text-muted-foreground">Total (auto)</Label>
                     <Input
                       className="h-12 text-base bg-muted"
                       type="number"
@@ -375,7 +371,7 @@ export default function RegistroCarga() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-base">Pago $ *</Label>
+                  <Label className="text-base">Payment $ *</Label>
                   <Input
                     className="h-12 text-base"
                     type="number"
@@ -386,18 +382,17 @@ export default function RegistroCarga() {
                   />
                 </div>
 
-                {/* Overnight toggle */}
                 <div className="flex items-center justify-between bg-muted rounded-lg p-3">
                   <div className="flex items-center gap-2">
                     <Moon className="w-4 h-4 text-muted-foreground" />
-                    <Label htmlFor="overnight" className="text-base cursor-pointer">Viaje con pernocta</Label>
+                    <Label htmlFor="overnight" className="text-base cursor-pointer">Overnight trip</Label>
                   </div>
                   <Switch id="overnight" checked={overnight} onCheckedChange={setOvernight} />
                 </div>
 
                 {overnight && (
                   <div className="space-y-1.5 animate-slide-up">
-                    <Label className="text-base">Hospedaje $</Label>
+                    <Label className="text-base">Lodging $</Label>
                     <Input
                       className="h-12 text-base"
                       type="number"
@@ -409,14 +404,13 @@ export default function RegistroCarga() {
                   </div>
                 )}
 
-                {/* Optional collapsible extras */}
                 <Collapsible open={extrasOpen} onOpenChange={setExtrasOpen}>
                   <CollapsibleTrigger asChild>
                     <button
                       type="button"
                       className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted rounded-lg text-sm font-medium"
                     >
-                      <span>Gastos adicionales (opcional)</span>
+                      <span>Additional expenses (optional)</span>
                       {extrasOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
                   </CollapsibleTrigger>
@@ -424,59 +418,58 @@ export default function RegistroCarga() {
                     {linkedGasForEdit.length > 0 ? (
                       <div className="bg-primary/10 border border-primary/20 p-3 rounded space-y-1">
                         <div className="flex items-center gap-1 text-sm font-medium text-primary">
-                          <Fuel className="w-4 h-4" /> Gasolina vinculada: {formatMoney(linkedGasCost)}
+                          <Fuel className="w-4 h-4" /> Linked fuel: {formatMoney(linkedGasCost)}
                         </div>
-                        <p className="text-xs text-muted-foreground">Desde Control de Gasolina.</p>
+                        <p className="text-xs text-muted-foreground">From Fuel Tracker.</p>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
-                        <Label>Gasolina $</Label>
+                        <Label>Fuel $</Label>
                         <Input type="number" inputMode="decimal" value={form.costoGasolina || ""} onChange={e => numField("costoGasolina", e.target.value)} placeholder="0" />
                       </div>
                     )}
                     {!editing && (
                       <div className="space-y-1.5">
-                        <Label>Peajes $</Label>
+                        <Label>Tolls $</Label>
                         <Input type="number" inputMode="decimal" value={form.peajes || ""} onChange={e => numField("peajes", e.target.value)} placeholder="0" />
-                        <p className="text-xs text-muted-foreground">Se registrará en Control de Peajes.</p>
+                        <p className="text-xs text-muted-foreground">Will be saved in Tolls.</p>
                       </div>
                     )}
                   </CollapsibleContent>
                 </Collapsible>
 
-                {/* Real-time totals */}
                 <div className="bg-muted p-3 rounded-lg space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total gastos:</span>
+                    <span className="text-muted-foreground">Total expenses:</span>
                     <strong className="text-destructive">{formatMoney(totalGastos)}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ganancia neta:</span>
+                    <span className="text-muted-foreground">Net profit:</span>
                     <strong className={gananciaNeta >= 0 ? "text-success" : "text-destructive"}>{formatMoney(gananciaNeta)}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ganancia/milla:</span>
+                    <span className="text-muted-foreground">Profit/mile:</span>
                     <strong>{formatMoney(gananciaPorMilla)}</strong>
                   </div>
                   <div className="flex justify-between border-t border-border pt-1 mt-1">
-                    <span className="text-muted-foreground">Duración del viaje:</span>
+                    <span className="text-muted-foreground">Trip duration:</span>
                     <strong>{formatDuracion(duracionHoras)}</strong>
                   </div>
                   {duracionHoras > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Ganancia/hora:</span>
+                      <span className="text-muted-foreground">Profit/hour:</span>
                       <strong>{formatMoney(gananciaPorHora)}</strong>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>Notas</Label>
-                  <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} placeholder="Notas opcionales" rows={2} />
+                  <Label>Notes</Label>
+                  <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} placeholder="Optional notes" rows={2} />
                 </div>
 
                 <Button className="w-full h-12 text-base" size="lg" onClick={handleSave} disabled={saving}>
-                  {saving ? "Guardando..." : (editing ? "Guardar Cambios" : "Registrar Carga")}
+                  {saving ? "Saving..." : (editing ? "Save Changes" : "Save Load")}
                 </Button>
               </div>
             </DialogContent>
@@ -488,8 +481,8 @@ export default function RegistroCarga() {
 
       {sorted.length === 0 ? (
         <div className="text-center text-muted-foreground py-16 px-4">
-          <p className="text-lg mb-2">Sin cargas registradas</p>
-          <p className="text-sm">Toca "Nueva" para agregar tu primera carga</p>
+          <p className="text-lg mb-2">No loads logged yet</p>
+          <p className="text-sm">Tap "New" to add your first load</p>
         </div>
       ) : (
         <div className="px-4 space-y-2">
@@ -516,29 +509,29 @@ export default function RegistroCarga() {
                 {expanded === c.id && (
                   <div className="px-3 pb-3 border-t border-border pt-2 text-sm space-y-2 animate-slide-up">
                     <div className="grid grid-cols-2 gap-1">
-                      <span className="text-muted-foreground">Pago:</span><span className="font-medium">{formatMoney(c.pagoRecibido)}</span>
-                      <span className="text-muted-foreground">Millas:</span><span>{formatNumber(c.millasTotal, 0)}</span>
-                      <span className="text-muted-foreground">Gastos:</span><span className="text-destructive">{formatMoney(c.totalGastos)}</span>
-                      <span className="text-muted-foreground">$/Milla:</span><span>{formatMoney(c.gananciaPorMilla)}</span>
+                      <span className="text-muted-foreground">Payment:</span><span className="font-medium">{formatMoney(c.pagoRecibido)}</span>
+                      <span className="text-muted-foreground">Miles:</span><span>{formatNumber(c.millasTotal, 0)}</span>
+                      <span className="text-muted-foreground">Expenses:</span><span className="text-destructive">{formatMoney(c.totalGastos)}</span>
+                      <span className="text-muted-foreground">$/Mile:</span><span>{formatMoney(c.gananciaPorMilla)}</span>
                     </div>
-                    
+
                     {linkedGas.length > 0 && (
                       <div className="bg-primary/10 border border-primary/20 rounded p-2 space-y-1">
                         <div className="flex items-center gap-1 font-medium text-primary text-xs">
-                          <Fuel className="w-3 h-3" /> Gasolina asociada ({formatMoney(linkedTotal)})
+                          <Fuel className="w-3 h-3" /> Linked fuel ({formatMoney(linkedTotal)})
                         </div>
                         {linkedGas.map(g => (
                           <div key={g.id} className="text-xs text-muted-foreground pl-4">
-                            {g.fecha} · {g.gasolinera || "Gasolinera"} · {g.galones} gal · {formatMoney(g.totalGasolina)}
+                            {g.fecha} · {g.gasolinera || "Station"} · {g.galones} gal · {formatMoney(g.totalGasolina)}
                           </div>
                         ))}
                       </div>
                     )}
-                    
+
                     {c.notas && <p className="text-muted-foreground italic">{c.notas}</p>}
                     <div className="flex gap-2 pt-1">
-                      <Button size="sm" variant="outline" onClick={() => handleOpen(c)}><Pencil className="w-3 h-3 mr-1" /> Editar</Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteCarga(c.id)}><Trash2 className="w-3 h-3 mr-1" /> Eliminar</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleOpen(c)}><Pencil className="w-3 h-3 mr-1" /> Edit</Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteCarga(c.id)}><Trash2 className="w-3 h-3 mr-1" /> Delete</Button>
                     </div>
                   </div>
                 )}
