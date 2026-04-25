@@ -13,7 +13,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       richColors
       closeButton
+      expand
+      visibleToasts={4}
+      duration={3500}
+      style={{ zIndex: 999999 } as React.CSSProperties}
       toastOptions={{
+        duration: 3500,
         classNames: {
           toast:
             "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg font-medium",
