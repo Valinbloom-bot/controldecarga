@@ -26,7 +26,7 @@ export default function Reembolsos() {
       <p>Para pedir un reembolso:</p>
       <ul>
         <li>Contáctanos desde la aplicación o el sitio web indicando el correo de tu cuenta y la fecha de la compra.</li>
-        <li>O contacta directamente a nuestro procesador de pagos Stripe a través del recibo que recibiste por correo.</li>
+        <li>O contacta directamente a Paddle, nuestro Merchant of Record, a través del recibo que recibiste por correo o visitando paddle.net/buyers.</li>
       </ul>
       <p>
         Procesaremos los reembolsos aprobados al método de pago original dentro de 5 a 10 días

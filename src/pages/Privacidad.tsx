@@ -21,7 +21,7 @@ export default function Privacidad() {
         <li><strong>Datos del Servicio:</strong> registros de cargas, gasolina, peajes, gastos del vehículo y metas que ingresas.</li>
         <li><strong>Datos de soporte:</strong> mensajes y consultas que nos envías.</li>
         <li><strong>Datos técnicos:</strong> dirección IP, tipo de dispositivo, navegador, identificadores de sesión y datos de uso.</li>
-        <li><strong>Datos de pago:</strong> procesados directamente por Stripe; nosotros no almacenamos números de tarjeta.</li>
+        <li><strong>Datos de pago:</strong> procesados directamente por Paddle como Merchant of Record; nosotros no almacenamos números de tarjeta.</li>
       </ul>
 
       <h2>3. Finalidades del Tratamiento</h2>
@@ -46,7 +46,7 @@ export default function Privacidad() {
       <p>Compartimos datos únicamente con:</p>
       <ul>
         <li><strong>Proveedores de servicios (subprocesadores):</strong> hosting, base de datos y autenticación (Supabase / Lovable Cloud).</li>
-        <li><strong>Procesador de pagos:</strong> Stripe, para gestionar suscripciones, pagos, facturación y cumplimiento fiscal.</li>
+        <li><strong>Merchant of Record:</strong> Paddle (paddle.com), que procesa todos los pagos, gestiona la facturación, el cumplimiento fiscal y administra reembolsos en nombre de VAL IN BLOOM.</li>
         <li><strong>Asesores profesionales:</strong> legales y contables, cuando sea necesario.</li>
         <li><strong>Autoridades:</strong> cuando lo exija la ley o un proceso legal válido.</li>
       </ul>
