@@ -42,7 +42,7 @@ serve(async (req) => {
     // Resolve human-readable price ID -> Stripe price object
     const prices = await stripe.prices.list({ limit: 100, active: true });
     const matched = prices.data.find(
-      (p) => p.metadata?.lovable_external_id === priceId || p.id === priceId,
+      (p: any) => p.metadata?.lovable_external_id === priceId || p.id === priceId,
     );
     if (!matched) {
       return new Response(JSON.stringify({ error: `Price not found: ${priceId}` }), {
