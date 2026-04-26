@@ -368,7 +368,14 @@ export default function Auth() {
             </>
           )}
         </Card>
+        <nav className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+          <a href="/precios" className="hover:text-foreground underline-offset-2 hover:underline">Precios</a>
+          <a href="/terminos" className="hover:text-foreground underline-offset-2 hover:underline">Términos</a>
+          <a href="/privacidad" className="hover:text-foreground underline-offset-2 hover:underline">Privacidad</a>
+          <a href="/reembolsos" className="hover:text-foreground underline-offset-2 hover:underline">Reembolsos</a>
+        </nav>
       </div>
     </div>
   );
 }
+

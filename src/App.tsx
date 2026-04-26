@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomNav from "@/components/BottomNav";
 import { PaymentFailedBanner } from "@/components/PaymentFailedBanner";
+import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
@@ -22,12 +23,12 @@ import Configuracion from "@/pages/Configuracion";
 import Cuenta from "@/pages/Cuenta";
 import Pricing from "@/pages/Pricing";
 import Admin from "@/pages/Admin";
+import Terminos from "@/pages/Terminos";
+import Privacidad from "@/pages/Privacidad";
+import Reembolsos from "@/pages/Reembolsos";
 import NotFound from "@/pages/NotFound";
 
-const PanelRedirect = () => <ProtectedShell><Dashboard /></ProtectedShell>;
-
 const queryClient = new QueryClient();
-
 
 const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
@@ -39,6 +40,14 @@ const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
   </ProtectedRoute>
 );
 
+// Pricing has its own layout (with PaymentTestModeBanner) and must be reachable
+// by unauthenticated visitors so they can review plans before signing up.
+const PricingShell = () => (
+  <div className="max-w-lg mx-auto min-h-screen bg-background">
+    <Pricing />
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
@@ -48,10 +57,17 @@ const App = () => (
             <Toaster />
             <Sonner />
             <Routes>
+              {/* Public pages */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/precios" element={<PricingShell />} />
+              <Route path="/terminos" element={<Terminos />} />
+              <Route path="/privacidad" element={<Privacidad />} />
+              <Route path="/reembolsos" element={<Reembolsos />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/panel" element={<PanelRedirect />} />
-              <Route path="/" element={<ProtectedShell><Dashboard /></ProtectedShell>} />
+
+              {/* Protected app */}
+              <Route path="/panel" element={<ProtectedShell><Dashboard /></ProtectedShell>} />
               <Route path="/cargas" element={<ProtectedShell><RegistroCarga /></ProtectedShell>} />
               <Route path="/gasolina" element={<ProtectedShell><ControlGasolina /></ProtectedShell>} />
               <Route path="/peajes" element={<ProtectedShell><ControlPeajes /></ProtectedShell>} />
@@ -61,8 +77,8 @@ const App = () => (
               <Route path="/metas" element={<ProtectedShell><DesgloseMes /></ProtectedShell>} />
               <Route path="/configuracion" element={<ProtectedShell><Configuracion /></ProtectedShell>} />
               <Route path="/cuenta" element={<ProtectedShell><Cuenta /></ProtectedShell>} />
-              <Route path="/precios" element={<ProtectedShell><Pricing /></ProtectedShell>} />
               <Route path="/admin" element={<ProtectedShell><Admin /></ProtectedShell>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

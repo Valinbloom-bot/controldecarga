@@ -53,7 +53,7 @@ export default function Admin() {
       </div>
     );
   }
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin) return <Navigate to="/panel" replace />;
 
   const handleGrant = async (e: React.FormEvent) => {
     e.preventDefault();

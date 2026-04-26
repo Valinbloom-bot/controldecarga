@@ -10,7 +10,7 @@ export function isVipEmail(email?: string | null) {
 }
 
 export function getPostLoginPath(email?: string | null) {
-  return isVipEmail(email) ? VIP_LANDING_PATH : "/";
+  return isVipEmail(email) ? VIP_LANDING_PATH : "/panel";
 }
 
 export { VIP_EMAILS };
