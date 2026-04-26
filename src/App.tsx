@@ -23,6 +23,7 @@ import Configuracion from "@/pages/Configuracion";
 import Cuenta from "@/pages/Cuenta";
 import Pricing from "@/pages/Pricing";
 import Admin from "@/pages/Admin";
+import AdminPagos from "@/pages/AdminPagos";
 import Terminos from "@/pages/Terminos";
 import Privacidad from "@/pages/Privacidad";
 import Reembolsos from "@/pages/Reembolsos";
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/configuracion" element={<ProtectedShell><Configuracion /></ProtectedShell>} />
               <Route path="/cuenta" element={<ProtectedShell><Cuenta /></ProtectedShell>} />
               <Route path="/admin" element={<ProtectedShell><Admin /></ProtectedShell>} />
+              <Route path="/admin/pagos" element={<ProtectedShell><AdminPagos /></ProtectedShell>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
