@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +99,11 @@ export default function Admin() {
       <PageHeader title="Admin" />
 
       <div className="px-4 space-y-4">
+        <Link to="/admin/pagos">
+          <Button variant="outline" className="w-full">
+            Estado de Stripe (modo, claves, webhooks)
+          </Button>
+        </Link>
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Otorgar acceso gratis</CardTitle>
