@@ -239,6 +239,12 @@ export default function Pricing() {
         <p className="text-[11px] text-center text-muted-foreground px-4">
           No se cobra durante la prueba. Después de 7 días se cobra automáticamente el plan elegido. Puedes cancelar en cualquier momento.
         </p>
+
+        <nav className="pt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+          <a href="/terminos" className="hover:text-foreground underline-offset-2 hover:underline">Términos</a>
+          <a href="/privacidad" className="hover:text-foreground underline-offset-2 hover:underline">Privacidad</a>
+          <a href="/reembolsos" className="hover:text-foreground underline-offset-2 hover:underline">Reembolsos</a>
+        </nav>
       </div>
     </div>
   );
