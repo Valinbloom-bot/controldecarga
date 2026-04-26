@@ -34,15 +34,24 @@ export default function Admin() {
       .from("comp_access")
       .select("id,email,expires_at,notes,created_at")
       .order("created_at", { ascending: false });
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else setRows((data as CompRow[]) ?? []);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setRows((data as CompRow[]) ?? []);
+    }
     setLoadingRows(false);
   };
 
-  useEffect(() => { if (isAdmin) fetchRows(); }, [isAdmin]);
+  useEffect(() => {
+    if (isAdmin) fetchRows();
+  }, [isAdmin]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
   }
   if (!isAdmin) return <Navigate to="/" replace />;
 
@@ -50,7 +59,7 @@ export default function Admin() {
     e.preventDefault();
     const trimmed = email.trim().toLowerCase();
     if (!trimmed || !trimmed.includes("@")) {
-      toast({ title: "Invalid email", variant: "destructive" });
+      toast({ title: "Email inválido", variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -59,19 +68,29 @@ export default function Admin() {
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       notes: notes.trim() || null,
     };
-    const { error } = await supabase.from("comp_access").upsert(payload, { onConflict: "email" });
+    const { error } = await supabase
+      .from("comp_access")
+      .upsert(payload, { onConflict: "email" });
     setSubmitting(false);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Access granted", description: `${trimmed} now has free access.` });
-    setEmail(""); setExpiresAt(""); setNotes("");
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Acceso otorgado", description: `${trimmed} ahora tiene acceso gratis.` });
+    setEmail("");
+    setExpiresAt("");
+    setNotes("");
     fetchRows();
   };
 
   const handleRevoke = async (id: string, emailLabel: string) => {
-    if (!confirm(`Revoke free access for ${emailLabel}?`)) return;
+    if (!confirm(`¿Revocar acceso gratis para ${emailLabel}?`)) return;
     const { error } = await supabase.from("comp_access").delete().eq("id", id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Access revoked" });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Acceso revocado" });
     fetchRows();
   };
 
@@ -81,41 +100,66 @@ export default function Admin() {
 
       <div className="px-4 space-y-4">
         <Card>
-          <CardHeader><CardTitle className="text-lg">Grant free access</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-lg">Otorgar acceso gratis</CardTitle>
+          </CardHeader>
           <CardContent>
             <form onSubmit={handleGrant} className="space-y-3">
               <div>
-                <Label htmlFor="email">User email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" required />
+                <Label htmlFor="email">Email del usuario</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="usuario@ejemplo.com"
+                  required
+                />
               </div>
               <div>
-                <Label htmlFor="expires">Expires on (optional, blank = lifetime)</Label>
-                <Input id="expires" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+                <Label htmlFor="expires">Expira el (opcional, vacío = de por vida)</Label>
+                <Input
+                  id="expires"
+                  type="date"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                />
               </div>
               <div>
-                <Label htmlFor="notes">Notes (optional)</Label>
-                <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. friend, beta tester" />
+                <Label htmlFor="notes">Notas (opcional)</Label>
+                <Input
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="ej. amigo, beta tester"
+                />
               </div>
               <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Grant access"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Otorgar acceso"}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-lg">Users with free access</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-lg">Usuarios con acceso gratis</CardTitle>
+          </CardHeader>
           <CardContent>
             {loadingRows ? (
-              <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              <div className="flex justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
             ) : rows.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No users with free access yet.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Aún no hay usuarios con acceso gratis.
+              </p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Email</TableHead>
-                    <TableHead>Expires</TableHead>
+                    <TableHead>Expira</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -124,10 +168,14 @@ export default function Admin() {
                     <TableRow key={r.id}>
                       <TableCell className="font-medium break-all">{r.email}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
-                        {r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "Lifetime"}
+                        {r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "De por vida"}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleRevoke(r.id, r.email)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRevoke(r.id, r.email)}
+                        >
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </TableCell>

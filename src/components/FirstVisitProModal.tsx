@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Check } from "lucide-react";
 import { isVipEmail } from "@/lib/vip-access";
 
-const STORAGE_KEY = "loadnest.proModalShown";
+const STORAGE_KEY = "controldecarga.proModalShown";
 
 const PERKS = [
-  "Unlimited loads and expenses",
-  "Full reports and exports",
-  "Cancel anytime during the trial",
+  "Cargas y gastos sin límite",
+  "Reportes y exportaciones completas",
+  "Cancela cuando quieras durante la prueba",
 ];
 
+/**
+ * Shows once per user after first login if they have no paid/trial/comp/admin access.
+ */
 export default function FirstVisitProModal() {
   const { user } = useAuth();
   const { hasFullAccess, loading } = useAccessStatus();
@@ -47,9 +50,9 @@ export default function FirstVisitProModal() {
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/15 text-primary flex items-center justify-center mb-2">
             <Sparkles className="w-6 h-6" />
           </div>
-          <DialogTitle className="text-center">Try Pro free for 7 days</DialogTitle>
+          <DialogTitle className="text-center">Prueba Plan Pro 7 días gratis</DialogTitle>
           <DialogDescription className="text-center">
-            Log loads, fuel, tolls, and expenses with no limits.
+            Registra cargas, gasolina, peajes y gastos sin límite.
           </DialogDescription>
         </DialogHeader>
         <ul className="space-y-2 my-2">
@@ -61,10 +64,10 @@ export default function FirstVisitProModal() {
         </ul>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
           <Button className="w-full" onClick={handleStart}>
-            Start free trial
+            Empezar prueba gratis
           </Button>
           <Button variant="ghost" className="w-full" onClick={() => setOpen(false)}>
-            Maybe later
+            Quizás más tarde
           </Button>
         </DialogFooter>
       </DialogContent>

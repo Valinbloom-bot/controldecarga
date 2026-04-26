@@ -16,17 +16,6 @@ import { useNavigate } from "react-router-dom";
 import { useUsageGate } from "@/hooks/useUsageGate";
 import UsageBanner from "@/components/UsageBanner";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  "Mantenimiento": "Maintenance",
-  "Llantas": "Tires",
-  "Seguro": "Insurance",
-  "Registro/Permisos": "Registration/Permits",
-  "Reparaciones": "Repairs",
-  "Pago del Vehículo": "Vehicle Payment",
-  "Otros": "Other",
-};
-const labelFor = (c: string) => CATEGORY_LABELS[c] ?? c;
-
 const buildEmptyForm = () => ({
   fecha: format(new Date(), "yyyy-MM-dd"),
   categoria: "Mantenimiento",
@@ -46,7 +35,7 @@ export default function GastosVehiculo() {
 
   const handleOpen = (g?: GastoVehiculo) => {
     if (!g && blocked) {
-      toast.info("You hit the free limit. Start your trial to log more.");
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
       navigate("/precios");
       return;
     }
@@ -69,11 +58,11 @@ export default function GastosVehiculo() {
   const handleSave = async () => {
     if (saving) return;
     if (!form.descripcion.trim()) {
-      toast.error("Enter a description");
+      toast.error("Ingresa una descripción");
       return;
     }
     if (!form.monto || form.monto <= 0) {
-      toast.error("Enter a valid amount");
+      toast.error("Ingresa un monto válido");
       return;
     }
     setSaving(true);
@@ -99,44 +88,44 @@ export default function GastosVehiculo() {
   return (
     <div className="pb-20">
       <PageHeader
-        title="Vehicle Expenses"
+        title="Gastos del Vehículo"
         action={
           <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpen()}>
-                <Plus className="w-4 h-4 mr-1" /> New
+                <Plus className="w-4 h-4 mr-1" /> Nuevo
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
               <DialogHeader>
-                <DialogTitle>{editing ? "Edit" : "New"} Vehicle Expense</DialogTitle>
+                <DialogTitle>{editing ? "Editar" : "Nuevo"} Gasto del Vehículo</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 <div>
-                  <Label>Date</Label>
+                  <Label>Fecha</Label>
                   <Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} />
                 </div>
                 <div>
-                  <Label>Category</Label>
+                  <Label>Categoría</Label>
                   <Select value={form.categoria} onValueChange={v => setField("categoria", v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CATEGORIAS_GASTO_VEHICULO.map(c => (
-                        <SelectItem key={c} value={c}>{labelFor(c)}</SelectItem>
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Description</Label>
+                  <Label>Descripción</Label>
                   <Input
                     value={form.descripcion}
                     onChange={e => setField("descripcion", e.target.value)}
-                    placeholder="e.g. Oil and filter change"
+                    placeholder="Ej: Cambio de aceite y filtro"
                   />
                 </div>
                 <div>
-                  <Label>Amount $</Label>
+                  <Label>Monto $</Label>
                   <Input
                     type="number"
                     inputMode="decimal"
@@ -146,11 +135,11 @@ export default function GastosVehiculo() {
                   />
                 </div>
                 <div>
-                  <Label>Notes (optional)</Label>
+                  <Label>Notas (opcional)</Label>
                   <Textarea value={form.notas} onChange={e => setField("notas", e.target.value)} rows={2} />
                 </div>
                 <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : (editing ? "Save" : "Save Expense")}
+                  {saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}
                 </Button>
               </div>
             </DialogContent>
@@ -163,7 +152,7 @@ export default function GastosVehiculo() {
         <div className="bg-card border border-border rounded-lg p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wrench className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Total this month</span>
+            <span className="text-sm text-muted-foreground">Total este mes</span>
           </div>
           <strong className="text-lg text-destructive">{formatMoney(monthTotal)}</strong>
         </div>
@@ -171,8 +160,8 @@ export default function GastosVehiculo() {
 
       {sorted.length === 0 ? (
         <div className="text-center text-muted-foreground py-16 px-4">
-          <p className="text-lg mb-2">No vehicle expenses yet</p>
-          <p className="text-sm">Tap "New" to log the first one</p>
+          <p className="text-lg mb-2">Sin gastos del vehículo</p>
+          <p className="text-sm">Toca "Nuevo" para registrar el primero</p>
         </div>
       ) : (
         <div className="px-4 space-y-2">
@@ -181,7 +170,7 @@ export default function GastosVehiculo() {
               <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase font-semibold tracking-wide bg-muted px-1.5 py-0.5 rounded">{labelFor(g.categoria)}</span>
+                    <span className="text-[10px] uppercase font-semibold tracking-wide bg-muted px-1.5 py-0.5 rounded">{g.categoria}</span>
                     <span className="text-xs text-muted-foreground">{g.fecha}</span>
                   </div>
                   <div className="font-semibold text-sm mt-1 truncate">{g.descripcion}</div>

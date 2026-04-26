@@ -7,6 +7,10 @@ import { isVipEmail } from "@/lib/vip-access";
 
 const FAILED_STATUSES = ["past_due", "unpaid", "incomplete"];
 
+/**
+ * Friendly banner shown when the user's last payment failed.
+ * Directs them to /cuenta to update their card.
+ */
 export function PaymentFailedBanner() {
   const { user } = useAuth();
   const { subscription } = useSubscription();
@@ -20,16 +24,16 @@ export function PaymentFailedBanner() {
 
   const messages: Record<string, { title: string; body: string }> = {
     past_due: {
-      title: "We couldn't charge your card",
-      body: "Your payment didn't go through. Update your card to keep your access.",
+      title: "No pudimos cobrar tu tarjeta",
+      body: "Tu pago no se procesó. Actualiza tu tarjeta para mantener tu acceso.",
     },
     unpaid: {
-      title: "Subscription suspended for non-payment",
-      body: "After several attempts the charge failed. Update your card to reactivate.",
+      title: "Suscripción suspendida por falta de pago",
+      body: "Después de varios intentos no se pudo cobrar. Actualiza tu tarjeta para reactivar.",
     },
     incomplete: {
-      title: "Incomplete payment",
-      body: "Your card was declined. Update your payment method to activate your plan.",
+      title: "Pago incompleto",
+      body: "Tu tarjeta fue rechazada. Actualiza tu método de pago para activar tu plan.",
     },
   };
 
@@ -50,7 +54,7 @@ export function PaymentFailedBanner() {
               onClick={() => navigate("/cuenta")}
             >
               <CreditCard className="w-3.5 h-3.5" />
-              Update card
+              Actualizar tarjeta
             </Button>
           )}
         </div>

@@ -26,6 +26,7 @@ const TIMEZONES = [
   { value: "HT", label: "HT - Hawaii" },
 ] as const;
 
+// Time stored as "HH:mm TZ" (e.g. "08:00 ET"); split for UI
 function parseTime(v?: string): { time: string; tz: string } {
   if (!v) return { time: "", tz: "ET" };
   const [time, tz] = v.split(" ");
@@ -46,7 +47,7 @@ const buildEmptyForm = () => ({
   galones: 0,
   precioPorGalon: 0,
   snackComida: 0,
-  metodoPago: "Cash",
+  metodoPago: "Efectivo",
   notas: "",
   cargaId: "",
 });
@@ -62,7 +63,7 @@ export default function ControlGasolina() {
 
   const handleOpen = (g?: RegistroGasolina) => {
     if (!g && blocked) {
-      toast.info("You hit the free limit. Start your trial to log more.");
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
       navigate("/precios");
       return;
     }
@@ -103,7 +104,7 @@ export default function ControlGasolina() {
   return (
     <div className="pb-20">
       <PageHeader
-        title="Fuel Tracker"
+        title="Control de Gasolina"
         action={
           <>
           <ExportMenu
@@ -111,19 +112,19 @@ export default function ControlGasolina() {
             getDate={(g) => g.fecha}
             onCSV={(f) => exportGasolinaCSV(f)}
             onPDF={(f) => exportGasolinaPDF(f)}
-            emptyMessage="No fuel entries"
+            emptyMessage="No hay registros de gasolina"
           />
           <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
-              <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> New</Button>
+              <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> Nueva</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
-              <DialogHeader><DialogTitle>{editing ? "Edit" : "New"} Fuel Entry</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editing ? "Editar" : "Nueva"} Gasolina</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Date</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
+                  <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setField("fecha", e.target.value)} /></div>
                   <div>
-                    <Label>Time</Label>
+                    <Label>Hora</Label>
                     <div className="flex gap-1">
                       <Input
                         type="time"
@@ -144,28 +145,28 @@ export default function ControlGasolina() {
                     </div>
                   </div>
                 </div>
-                <div><Label>Station</Label><Input value={form.gasolinera} onChange={e => setField("gasolinera", e.target.value)} placeholder="Name" /></div>
-                <div><Label>Location</Label><Input value={form.ubicacion} onChange={e => setField("ubicacion", e.target.value)} placeholder="City, State" /></div>
+                <div><Label>Gasolinera</Label><Input value={form.gasolinera} onChange={e => setField("gasolinera", e.target.value)} placeholder="Nombre" /></div>
+                <div><Label>Ubicación</Label><Input value={form.ubicacion} onChange={e => setField("ubicacion", e.target.value)} placeholder="Ciudad, Estado" /></div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Gallons</Label><Input type="number" step="0.01" value={form.galones || ""} onChange={e => numField("galones", e.target.value)} /></div>
-                  <div><Label>Price/Gallon</Label><Input type="number" step="0.01" value={form.precioPorGalon || ""} onChange={e => numField("precioPorGalon", e.target.value)} /></div>
+                  <div><Label>Galones</Label><Input type="number" step="0.01" value={form.galones || ""} onChange={e => numField("galones", e.target.value)} /></div>
+                  <div><Label>Precio/Galón</Label><Input type="number" step="0.01" value={form.precioPorGalon || ""} onChange={e => numField("precioPorGalon", e.target.value)} /></div>
                 </div>
-                <div className="bg-muted p-2 rounded text-sm">Fuel total: <strong>{formatMoney(totalGas)}</strong></div>
-                <div><Label>Snack/Food ($)</Label><Input type="number" value={form.snackComida || ""} onChange={e => numField("snackComida", e.target.value)} /></div>
-                <div className="bg-muted p-2 rounded text-sm">Total spent: <strong>{formatMoney(totalGastado)}</strong></div>
-                <div><Label>Payment method</Label>
+                <div className="bg-muted p-2 rounded text-sm">Total gasolina: <strong>{formatMoney(totalGas)}</strong></div>
+                <div><Label>Snack/Comida ($)</Label><Input type="number" value={form.snackComida || ""} onChange={e => numField("snackComida", e.target.value)} /></div>
+                <div className="bg-muted p-2 rounded text-sm">Total gastado: <strong>{formatMoney(totalGastado)}</strong></div>
+                <div><Label>Método de pago</Label>
                   <select className="w-full border border-input bg-background rounded-md px-3 py-2 text-sm" value={form.metodoPago} onChange={e => setField("metodoPago", e.target.value)}>
-                    <option>Cash</option><option>Debit card</option><option>Credit card</option><option>EFS</option><option>Other</option>
+                    <option>Efectivo</option><option>Tarjeta débito</option><option>Tarjeta crédito</option><option>EFS</option><option>Otro</option>
                   </select>
                 </div>
                 <div>
-                  <Label>Link to load (optional)</Label>
+                  <Label>Vincular a carga (opcional)</Label>
                   <Select value={form.cargaId} onValueChange={v => setField("cargaId", v === "none" ? "" : v)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Not linked" />
+                      <SelectValue placeholder="Sin vincular" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Not linked</SelectItem>
+                      <SelectItem value="none">Sin vincular</SelectItem>
                       {data.cargas.map(c => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.ubicacionRecogida} → {c.ubicacionEntrega} ({c.fechaRecogida})
@@ -174,8 +175,8 @@ export default function ControlGasolina() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Notes</Label><Input value={form.notas} onChange={e => setField("notas", e.target.value)} /></div>
-                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : (editing ? "Save" : "Save Entry")}</Button>
+                <div><Label>Notas</Label><Input value={form.notas} onChange={e => setField("notas", e.target.value)} /></div>
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -185,14 +186,14 @@ export default function ControlGasolina() {
       <UsageBanner resource="gasolina" />
 
       {sorted.length === 0 ? (
-        <div className="text-center text-muted-foreground py-16"><p>No fuel entries</p></div>
+        <div className="text-center text-muted-foreground py-16"><p>Sin registros de gasolina</p></div>
       ) : (
         <div className="px-4 space-y-2">
           {sorted.map(g => (
             <div key={g.id} className="bg-card border border-border rounded-lg p-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-semibold text-sm">{g.gasolinera || "Station"}</div>
+                  <div className="font-semibold text-sm">{g.gasolinera || "Gasolinera"}</div>
                   <div className="text-xs text-muted-foreground">{g.fecha}{g.hora ? ` · ${g.hora}` : ""} · {g.ubicacion}</div>
                   <div className="text-xs mt-1">{g.galones} gal × {formatMoney(g.precioPorGalon)}</div>
                   {g.cargaId && (

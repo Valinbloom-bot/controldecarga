@@ -9,23 +9,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, Mail } from "lucide-react";
+import { Truck, Loader2, CheckCircle2, Mail } from "lucide-react";
 import { getPostLoginPath } from "@/lib/vip-access";
-import loadnestLogo from "@/assets/loadnest-logo.png";
 
 const signUpSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Invalid email").max(255),
-  password: z.string().min(6, "Minimum 6 characters").max(72),
+  name: z.string().trim().min(1, "El nombre es obligatorio").max(100),
+  email: z.string().trim().email("Correo inválido").max(255),
+  password: z.string().min(6, "Mínimo 6 caracteres").max(72),
 });
 
 const signInSchema = z.object({
-  email: z.string().trim().email("Invalid email").max(255),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().trim().email("Correo inválido").max(255),
+  password: z.string().min(1, "Contraseña obligatoria"),
 });
 
 const resetSchema = z.object({
-  email: z.string().trim().email("Invalid email").max(255),
+  email: z.string().trim().email("Correo inválido").max(255),
 });
 
 export default function Auth() {
@@ -65,7 +64,7 @@ export default function Auth() {
           return;
         }
         setResetSent(true);
-        toast.success("We sent you an email with a recovery link");
+        toast.success("Te enviamos un correo con el enlace de recuperación");
         return;
       }
 
@@ -85,19 +84,20 @@ export default function Auth() {
         });
         if (error) {
           if (error.message.includes("already registered")) {
-            toast.error("This email is already registered. Please sign in.");
+            toast.error("Este correo ya está registrado. Inicia sesión.");
           } else {
             toast.error(error.message);
           }
           return;
         }
+        // If email confirmation is required, no session is returned.
         if (!data.session) {
           setSignupEmail(parsed.data.email);
           setSignupSent(true);
           setPassword("");
           return;
         }
-        toast.success("Account created! Welcome.");
+        toast.success("¡Cuenta creada! Bienvenido.");
       } else {
         const parsed = signInSchema.safeParse({ email, password });
         if (!parsed.success) {
@@ -113,9 +113,9 @@ export default function Auth() {
           if (msg.includes("not confirmed") || msg.includes("email not confirmed")) {
             setSignupEmail(parsed.data.email);
             setSignupSent(true);
-            toast.error("Please confirm your email before signing in");
+            toast.error("Confirma tu correo antes de iniciar sesión");
           } else {
-            toast.error(error.message.includes("Invalid") ? "Incorrect email or password" : error.message);
+            toast.error(error.message.includes("Invalid") ? "Correo o contraseña incorrectos" : error.message);
           }
           return;
         }
@@ -150,7 +150,7 @@ export default function Auth() {
         toast.error(error.message);
         return;
       }
-      toast.success("Confirmation email resent");
+      toast.success("Correo de confirmación reenviado");
     } finally {
       setBusy(false);
     }
@@ -160,13 +160,11 @@ export default function Auth() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <img
-            src={loadnestLogo}
-            alt="LoadNest"
-            className="w-20 h-20 rounded-2xl mb-3 shadow-lg"
-          />
-          <h1 className="text-2xl font-bold">LoadNest</h1>
-          <p className="text-sm text-muted-foreground">Run your business on the road</p>
+          <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-3">
+            <Truck className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold">Control de Cargas</h1>
+          <p className="text-sm text-muted-foreground">Gestiona tu negocio sobre ruedas</p>
         </div>
 
         <Card className="p-6">
@@ -176,14 +174,14 @@ export default function Auth() {
                 <Mail className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="font-bold text-lg">Confirm your email</h2>
+                <h2 className="font-bold text-lg">Confirma tu correo</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  We sent a confirmation link to{" "}
+                  Te enviamos un enlace de confirmación a{" "}
                   <span className="font-semibold text-foreground">{signupEmail}</span>.
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Click the link to activate your account and start your 7-day free trial.
-                  Check your spam folder if you don't see it.
+                  Haz clic en el enlace para activar tu cuenta y empezar tu prueba gratis de 7 días.
+                  Revisa tu carpeta de spam si no lo ves.
                 </p>
               </div>
               <div className="space-y-2">
@@ -194,7 +192,7 @@ export default function Auth() {
                   disabled={busy}
                 >
                   {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Resend email
+                  Reenviar correo
                 </Button>
                 <button
                   type="button"
@@ -204,16 +202,16 @@ export default function Auth() {
                     setMode("signin");
                   }}
                 >
-                  Back to sign in
+                  Volver al inicio de sesión
                 </button>
               </div>
             </div>
           ) : mode === "forgot" ? (
             <div className="space-y-4">
               <div>
-                <h2 className="font-bold text-lg">Reset password</h2>
+                <h2 className="font-bold text-lg">Recuperar contraseña</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Enter your email and we'll send you a link to reset your password.
+                  Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
                 </p>
               </div>
 
@@ -221,8 +219,8 @@ export default function Auth() {
                 <div className="text-center space-y-3 py-2">
                   <CheckCircle2 className="w-10 h-10 text-primary mx-auto" />
                   <p className="text-sm">
-                    Check your inbox at <span className="font-semibold">{email}</span>.
-                    If it doesn't show up in a few minutes, check your spam folder.
+                    Revisa tu bandeja de entrada en <span className="font-semibold">{email}</span>.
+                    Si no aparece en unos minutos, revisa tu carpeta de spam.
                   </p>
                   <Button
                     variant="outline"
@@ -232,33 +230,33 @@ export default function Auth() {
                       setResetSent(false);
                     }}
                   >
-                    Back to sign in
+                    Volver al inicio de sesión
                   </Button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="email-reset">Email</Label>
+                    <Label htmlFor="email-reset">Correo</Label>
                     <Input
                       id="email-reset"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@email.com"
+                      placeholder="tu@correo.com"
                       required
                       autoFocus
                     />
                   </div>
                   <Button type="submit" className="w-full mt-2" disabled={busy}>
                     {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-                    Send link
+                    Enviar enlace
                   </Button>
                   <button
                     type="button"
                     className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => setMode("signin")}
                   >
-                    Back to sign in
+                    Volver al inicio de sesión
                   </button>
                 </form>
               )}
@@ -273,7 +271,7 @@ export default function Auth() {
                     mode === "signin" ? "bg-card shadow-sm" : "text-muted-foreground"
                   }`}
                 >
-                  Sign in
+                  Iniciar sesión
                 </button>
                 <button
                   type="button"
@@ -282,38 +280,38 @@ export default function Auth() {
                     mode === "signup" ? "bg-card shadow-sm" : "text-muted-foreground"
                   }`}
                 >
-                  Create account
+                  Crear cuenta
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 {mode === "signup" && (
                   <div className="space-y-1.5">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">Nombre</Label>
                     <Input
                       id="name"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Your name"
+                      placeholder="Tu nombre"
                       required
                     />
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Correo</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@email.com"
+                    placeholder="tu@correo.com"
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Contraseña</Label>
                     {mode === "signin" && (
                       <button
                         type="button"
@@ -323,7 +321,7 @@ export default function Auth() {
                           setPassword("");
                         }}
                       >
-                        Forgot password?
+                        ¿Olvidaste tu contraseña?
                       </button>
                     )}
                   </div>
@@ -339,7 +337,7 @@ export default function Auth() {
 
                 <Button type="submit" className="w-full mt-2" disabled={busy}>
                   {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {mode === "signup" ? "Create account" : "Sign in"}
+                  {mode === "signup" ? "Crear cuenta" : "Iniciar sesión"}
                 </Button>
               </form>
 
@@ -348,7 +346,7 @@ export default function Auth() {
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-card px-2 text-muted-foreground">or continue with</span>
+                  <span className="bg-card px-2 text-muted-foreground">o continúa con</span>
                 </div>
               </div>
 

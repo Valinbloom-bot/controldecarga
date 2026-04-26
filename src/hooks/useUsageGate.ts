@@ -7,10 +7,10 @@ export const FREE_TIER_LIMIT = 5;
 export type Resource = "cargas" | "gasolina" | "peajes" | "gastosVehiculo";
 
 const LABELS: Record<Resource, { singular: string; plural: string }> = {
-  cargas: { singular: "load", plural: "loads" },
-  gasolina: { singular: "fuel entry", plural: "fuel entries" },
-  peajes: { singular: "toll", plural: "tolls" },
-  gastosVehiculo: { singular: "vehicle expense", plural: "vehicle expenses" },
+  cargas: { singular: "carga", plural: "cargas" },
+  gasolina: { singular: "registro de gasolina", plural: "registros de gasolina" },
+  peajes: { singular: "peaje", plural: "peajes" },
+  gastosVehiculo: { singular: "gasto del vehículo", plural: "gastos del vehículo" },
 };
 
 export function useUsageGate(resource: Resource) {

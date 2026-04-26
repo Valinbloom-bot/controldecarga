@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-const SAVE_SUCCESS_MSG = "Saved to cloud ✓";
-const SAVE_ERROR_MSG = "Save failed - please try again";
-const DELETE_SUCCESS_MSG = "Deleted from cloud ✓";
+const SAVE_SUCCESS_MSG = "Guardado en la nube ✓";
+const SAVE_ERROR_MSG = "Error al guardar - intenta de nuevo";
+const DELETE_SUCCESS_MSG = "Eliminado en la nube ✓";
 
 function notifySaveError(err: any) {
   console.error("[AppContext] save failed:", err);
@@ -255,7 +255,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ]);
       if (cancelled) return;
       const firstError = [cRes, gRes, pRes, mRes, vRes].find((r) => r.error)?.error;
-      if (firstError) toast.error("Could not load your data. Check your connection.");
+      if (firstError) toast.error("No se pudieron cargar tus datos. Revisa tu conexión.");
       const gasolina = (gRes.data ?? []).map(rowToGas);
       const cargas = applyCalcs((cRes.data ?? []).map(rowToCarga), gasolina);
       setData((d) => ({

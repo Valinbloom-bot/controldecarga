@@ -35,7 +35,7 @@ export default function ControlPeajes() {
 
   const handleOpen = (p?: RegistroPeaje) => {
     if (!p && blocked) {
-      toast.info("You hit the free limit. Start your trial to log more.");
+      toast.info("Llegaste al límite gratis. Empieza tu prueba para registrar más.");
       navigate("/precios");
       return;
     }
@@ -58,7 +58,7 @@ export default function ControlPeajes() {
   return (
     <div className="pb-20">
       <PageHeader
-        title="Tolls"
+        title="Control de Peajes"
         action={
           <>
           <ExportMenu
@@ -66,25 +66,25 @@ export default function ControlPeajes() {
             getDate={(p) => p.fecha}
             onCSV={(f) => exportPeajesCSV(f)}
             onPDF={(f) => exportPeajesPDF(f)}
-            emptyMessage="No tolls"
+            emptyMessage="No hay peajes"
           />
           <Dialog open={open} onOpenChange={(v) => { if (!saving) setOpen(v); }}>
             <DialogTrigger asChild>
-              <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> New</Button>
+              <Button size="sm" onClick={() => handleOpen()}><Plus className="w-4 h-4 mr-1" /> Nuevo</Button>
             </DialogTrigger>
             <DialogContent className="max-w-md" onInteractOutside={(e) => { if (saving) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (saving) e.preventDefault(); }}>
-              <DialogHeader><DialogTitle>{editing ? "Edit" : "New"} Toll</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} Peaje</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div><Label>Date</Label><Input type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} /></div>
-                <div><Label>Location / Highway</Label><Input value={form.ubicacionCarretera} onChange={e => setForm(f => ({ ...f, ubicacionCarretera: e.target.value }))} placeholder="I-95, NJ Turnpike..." /></div>
-                <div><Label>Amount ($)</Label><Input type="number" step="0.01" value={form.monto || ""} onChange={e => setForm(f => ({ ...f, monto: parseFloat(e.target.value) || 0 }))} /></div>
-                <div><Label>Payment method</Label>
+                <div><Label>Fecha</Label><Input type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} /></div>
+                <div><Label>Ubicación / Carretera</Label><Input value={form.ubicacionCarretera} onChange={e => setForm(f => ({ ...f, ubicacionCarretera: e.target.value }))} placeholder="I-95, NJ Turnpike..." /></div>
+                <div><Label>Monto ($)</Label><Input type="number" step="0.01" value={form.monto || ""} onChange={e => setForm(f => ({ ...f, monto: parseFloat(e.target.value) || 0 }))} /></div>
+                <div><Label>Método de pago</Label>
                   <select className="w-full border border-input bg-background rounded-md px-3 py-2 text-sm" value={form.metodoPago} onChange={e => setForm(f => ({ ...f, metodoPago: e.target.value }))}>
-                    <option>E-ZPass</option><option>Cash</option><option>Card</option><option>Other</option>
+                    <option>E-ZPass</option><option>Efectivo</option><option>Tarjeta</option><option>Otro</option>
                   </select>
                 </div>
-                <div><Label>Notes</Label><Input value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} /></div>
-                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : (editing ? "Save" : "Save Toll")}</Button>
+                <div><Label>Notas</Label><Input value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} /></div>
+                <Button className="w-full" size="lg" onClick={handleSave} disabled={saving}>{saving ? "Guardando..." : (editing ? "Guardar" : "Registrar")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -95,19 +95,19 @@ export default function ControlPeajes() {
 
       <div className="px-4 mb-4">
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">
-          <span className="text-sm text-muted-foreground">Total tolls this month</span>
+          <span className="text-sm text-muted-foreground">Total peajes este mes</span>
           <p className="text-2xl font-bold font-display text-primary">{formatMoney(monthTotal)}</p>
         </div>
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center text-muted-foreground py-16"><p>No tolls logged</p></div>
+        <div className="text-center text-muted-foreground py-16"><p>Sin peajes registrados</p></div>
       ) : (
         <div className="px-4 space-y-2">
           {sorted.map(p => (
             <div key={p.id} className="bg-card border border-border rounded-lg p-3 flex justify-between items-center">
               <div>
-                <div className="font-semibold text-sm">{p.ubicacionCarretera || "Toll"}</div>
+                <div className="font-semibold text-sm">{p.ubicacionCarretera || "Peaje"}</div>
                 <div className="text-xs text-muted-foreground">{p.fecha} · {p.metodoPago}</div>
               </div>
               <div className="flex items-center gap-2">

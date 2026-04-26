@@ -2,14 +2,14 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, Truck, Fuel, CreditCard, Wrench, BarChart3, CalendarRange, User } from "lucide-react";
 
 const tabs = [
-  { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/cargas", icon: Truck, label: "Loads" },
-  { to: "/gasolina", icon: Fuel, label: "Fuel" },
-  { to: "/peajes", icon: CreditCard, label: "Tolls" },
-  { to: "/gastos-vehiculo", icon: Wrench, label: "Expenses" },
-  { to: "/semanal", icon: BarChart3, label: "Weekly" },
-  { to: "/metas", icon: CalendarRange, label: "Month" },
-  { to: "/cuenta", icon: User, label: "Account" },
+  { to: "/", icon: LayoutDashboard, label: "Panel" },
+  { to: "/cargas", icon: Truck, label: "Cargas" },
+  { to: "/gasolina", icon: Fuel, label: "Gas" },
+  { to: "/peajes", icon: CreditCard, label: "Peajes" },
+  { to: "/gastos-vehiculo", icon: Wrench, label: "Gastos" },
+  { to: "/semanal", icon: BarChart3, label: "Semanal" },
+  { to: "/metas", icon: CalendarRange, label: "Mes" },
+  { to: "/cuenta", icon: User, label: "Cuenta" },
 ];
 
 export default function BottomNav() {

@@ -1,5 +1,6 @@
 import { Carga, RegistroGasolina, RegistroPeaje, GastoVehiculo } from "@/types";
 import { startOfWeek, endOfWeek, format, parseISO, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
+import { es } from "date-fns/locale";
 
 export function getWeekRange(date: Date) {
   const start = startOfWeek(date, { weekStartsOn: 1 });
@@ -26,7 +27,7 @@ export function filterByDateRange<T extends { fecha?: string; fechaRecogida?: st
 
 export function filterByMonth<T extends { fecha?: string; fechaRecogida?: string }>(
   items: T[],
-  yearMonth: string
+  yearMonth: string // YYYY-MM
 ): T[] {
   const [y, m] = yearMonth.split("-").map(Number);
   const start = startOfMonth(new Date(y, m - 1));
@@ -86,7 +87,7 @@ export function computeWeeklySummary(
   const gananciaPorMilla = millasTotal > 0 ? gananciaNeta / millasTotal : 0;
 
   return {
-    weekLabel: `${format(start, "MMM dd")} - ${format(end, "MMM dd, yyyy")}`,
+    weekLabel: `${format(start, "dd MMM", { locale: es })} - ${format(end, "dd MMM yyyy", { locale: es })}`,
     start, end, totalCargas, millasTotal, ingresosTotal,
     gastoGasolina, gastoComida, gastoHospedaje, gastoPeajes, gastoVehiculo, otrosGastos,
     gastosTotal, gananciaNeta, ingresoPromedioPorCarga, gananciaPorMilla,
@@ -152,9 +153,9 @@ export function computeMonthlySummary(
 }
 
 export function formatMoney(n: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+  return new Intl.NumberFormat("es-US", { style: "currency", currency: "USD" }).format(n);
 }
 
 export function formatNumber(n: number, decimals = 1): string {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals }).format(n);
+  return new Intl.NumberFormat("es-US", { maximumFractionDigits: decimals }).format(n);
 }
