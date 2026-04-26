@@ -61,9 +61,11 @@ export default function Terminos() {
       <h2>8. Suscripciones, Pagos y Facturación</h2>
       <p>
         El Servicio se ofrece mediante suscripción mensual ($4.99 USD) o anual ($39.99 USD),
-        con un período de prueba gratuito de 7 días. Los pagos son procesados por nuestro
-        proveedor Stripe. Al finalizar la prueba, se cobra automáticamente el plan elegido y
-        se renueva al final de cada período hasta que canceles.
+        con un período de prueba gratuito de 7 días. Los pagos son procesados por Paddle.com,
+        nuestro Merchant of Record, quien aparece en los estados de cuenta del comprador,
+        procesa todos los pedidos y pagos, gestiona la facturación y maneja devoluciones y
+        reembolsos. Al finalizar la prueba, se cobra automáticamente el plan elegido y se
+        renueva al final de cada período hasta que canceles.
       </p>
       <p>
         Puedes cancelar tu suscripción en cualquier momento desde tu cuenta. La cancelación
