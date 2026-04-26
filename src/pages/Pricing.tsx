@@ -56,7 +56,7 @@ export default function Pricing() {
       return;
     }
     if (loading || clientSecret || justSucceeded) return;
-    if (hasFullAccess) navigate("/", { replace: true });
+    if (hasFullAccess) navigate("/panel", { replace: true });
   }, [hasFullAccess, loading, clientSecret, justSucceeded, navigate, isVip, user?.email]);
 
   if (isVip) {
@@ -115,7 +115,7 @@ export default function Pricing() {
   }
 
   if (hasFullAccess && !clientSecret && !justSucceeded) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/panel" replace />;
   }
 
   if (clientSecret) {
