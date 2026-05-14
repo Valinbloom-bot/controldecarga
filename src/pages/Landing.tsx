@@ -40,7 +40,7 @@ export default function Landing() {
           <Sparkles className="w-3.5 h-3.5" /> 7 días gratis
         </div>
         <h1 className="text-3xl md:text-4xl font-bold mb-3">
-          La app de gestión para cargo van owners y hotshot operators
+La app de gestión para conductores de cargo vans y operadores hotshot
         </h1>
         <p className="text-muted-foreground mb-6 text-base md:text-lg">
           Registra cargas, gasolina, peajes y gastos. Conoce tu ganancia real por milla, semana y mes.
