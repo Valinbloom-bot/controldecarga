@@ -67,7 +67,6 @@ serve(async (req) => {
         ? { customer: existing.stripe_customer_id }
         : { customer_email: user.email ?? undefined }),
       subscription_data: {
-        trial_period_days: 7,
         metadata: { userId: user.id },
       },
       metadata: { userId: user.id },
