@@ -27,6 +27,7 @@ import AdminPagos from "@/pages/AdminPagos";
 import Terminos from "@/pages/Terminos";
 import Privacidad from "@/pages/Privacidad";
 import Reembolsos from "@/pages/Reembolsos";
+import Unsubscribe from "@/pages/Unsubscribe";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/reembolsos" element={<Reembolsos />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
 
               {/* Protected app */}
               <Route path="/panel" element={<ProtectedShell><Dashboard /></ProtectedShell>} />
