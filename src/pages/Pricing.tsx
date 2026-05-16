@@ -41,7 +41,7 @@ export default function Pricing() {
 
   useEffect(() => {
     if (justSucceeded) {
-      toast.success("¡Suscripción iniciada! Tu prueba de 7 días está activa.");
+      toast.success("¡Suscripción activa! Gracias por unirte.");
       const t = setInterval(refetch, 1500);
       const stop = setTimeout(() => clearInterval(t), 12000);
       params.delete("success");
@@ -142,10 +142,10 @@ export default function Pricing() {
       <div className="px-4 space-y-4">
         <div className="text-center pt-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5" /> 7 días gratis
+            <Sparkles className="w-3.5 h-3.5" /> Elige tu plan
           </div>
-          <h2 className="text-2xl font-bold">Lleva el control completo</h2>
-          <p className="text-sm text-muted-foreground mt-1">Cancela cuando quieras durante la prueba.</p>
+          <h2 className="text-2xl font-bold">Sigue con el control completo</h2>
+          <p className="text-sm text-muted-foreground mt-1">Cancela cuando quieras desde tu cuenta.</p>
         </div>
 
         {isAdmin && (
@@ -230,14 +230,14 @@ export default function Pricing() {
                 onClick={() => handleSubscribe(plan.priceId)}
               >
                 {busyPriceId === plan.priceId && <Loader2 className="w-4 h-4 animate-spin" />}
-                {hasFullAccess ? "Acceso activo" : "Empezar prueba de 7 días"}
+                {hasFullAccess ? "Acceso activo" : "Suscribirme"}
               </Button>
             </Card>
           ))}
         </div>
 
         <p className="text-[11px] text-center text-muted-foreground px-4">
-          No se cobra durante la prueba. Después de 7 días se cobra automáticamente el plan elegido. Puedes cancelar en cualquier momento.
+          Se cobra inmediatamente el plan elegido. Puedes cancelar en cualquier momento desde tu cuenta.
         </p>
 
         <nav className="pt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
