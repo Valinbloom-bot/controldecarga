@@ -3,9 +3,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCompAccess } from "@/hooks/useCompAccess";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { isVipEmail } from "@/lib/vip-access";
 
-export type AccessMode = "subscription" | "comp" | "admin" | "none";
+export type AccessMode = "subscription" | "trial" | "comp" | "admin" | "none";
 
 export function useAccessStatus() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export function useAccessStatus() {
   } = useSubscription();
   const { hasComp, loading: loadingComp } = useCompAccess();
   const { isAdmin, loading: loadingRole } = useUserRole();
+  const { trialActive, trialDaysLeft, trialEndsAt } = useTrialStatus();
 
   const isVip = isVipEmail(user?.email);
 
@@ -28,8 +30,9 @@ export function useAccessStatus() {
     if (isAdmin) return "admin";
     if (hasComp) return "comp";
     if (isActive) return "subscription";
+    if (trialActive) return "trial";
     return "none";
-  }, [isVip, isAdmin, hasComp, isActive]);
+  }, [isVip, isAdmin, hasComp, isActive, trialActive]);
 
   return {
     subscription,
@@ -37,6 +40,9 @@ export function useAccessStatus() {
     isTrialing,
     hasComp,
     isAdmin: isVip || isAdmin,
+    trialActive,
+    trialDaysLeft,
+    trialEndsAt,
     hasFullAccess: accessMode !== "none",
     accessMode,
     loading,
