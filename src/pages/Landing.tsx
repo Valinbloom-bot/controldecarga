@@ -112,6 +112,8 @@ La app de gestión para conductores de cargo vans y operadores hotshot
           Después de la prueba se cobra automáticamente. Puedes cancelar en cualquier momento desde tu cuenta.
         </p>
       </section>
+      </main>
+
 
       <footer className="border-t mt-12 px-4 py-6">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
