@@ -1,9 +1,27 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Truck } from "lucide-react";
 
-export default function LegalLayout({ title, children }: { title: string; children: React.ReactNode }) {
+interface LegalLayoutProps {
+  title: string;
+  children: React.ReactNode;
+  description?: string;
+  canonicalPath?: string;
+}
+
+export default function LegalLayout({ title, children, description, canonicalPath }: LegalLayoutProps) {
+  const fullTitle = `${title} — Control de Cargas`;
+  const canonical = canonicalPath ? `https://controldecargas.com${canonicalPath}` : undefined;
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{fullTitle}</title>
+        {description && <meta name="description" content={description} />}
+        {canonical && <link rel="canonical" href={canonical} />}
+        <meta property="og:title" content={fullTitle} />
+        {description && <meta property="og:description" content={description} />}
+        {canonical && <meta property="og:url" content={canonical} />}
+      </Helmet>
       <header className="px-4 py-4 border-b">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
