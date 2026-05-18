@@ -112,6 +112,7 @@ function cargaToRow(c: Partial<Carga>, userId: string) {
     hospedaje: c.hospedaje ?? 0,
     otros_gastos: c.otrosGastos ?? 0,
     notas: c.notas ?? "",
+    paradas: (c.paradas && c.paradas.length > 0 ? c.paradas : null) as any,
   };
 }
 
