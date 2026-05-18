@@ -1,3 +1,12 @@
+export interface Parada {
+  tipo: "recogida" | "entrega";
+  fecha: string;
+  hora: string;
+  horaSalida?: string;
+  ubicacion: string;
+  notas?: string;
+}
+
 export interface Carga {
   id: string;
   fechaRecogida: string;
@@ -21,6 +30,7 @@ export interface Carga {
   gananciaPorMilla: number; // auto
   ingresoPorMilla: number; // auto
   notas: string;
+  paradas?: Parada[]; // ordered list of multiple pickups + deliveries
   createdAt: string;
 }
 
