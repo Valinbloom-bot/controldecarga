@@ -2,7 +2,12 @@ import LegalLayout from "@/components/LegalLayout";
 
 export default function Reembolsos() {
   return (
-    <LegalLayout title="Política de Reembolsos">
+    <LegalLayout
+      title="Política de Reembolsos"
+      description="Garantía de devolución de 30 días para suscripciones a Control de Cargas. Conoce el proceso."
+      canonicalPath="/reembolsos"
+    >
+
       <p>
         En <strong>VAL IN BLOOM</strong> queremos que estés satisfecho con Control de Cargas. Por eso ofrecemos
         una <strong>garantía de devolución de 30 días</strong>.

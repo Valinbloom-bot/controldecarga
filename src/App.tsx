@@ -36,7 +36,7 @@ const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
     <div className="max-w-lg mx-auto min-h-screen bg-background">
       <PaymentFailedBanner />
-      {children}
+      <main>{children}</main>
       <BottomNav />
     </div>
   </ProtectedRoute>
@@ -45,10 +45,11 @@ const ProtectedShell = ({ children }: { children: React.ReactNode }) => (
 // Pricing has its own layout (with PaymentTestModeBanner) and must be reachable
 // by unauthenticated visitors so they can review plans before signing up.
 const PricingShell = () => (
-  <div className="max-w-lg mx-auto min-h-screen bg-background">
+  <main className="max-w-lg mx-auto min-h-screen bg-background">
     <Pricing />
-  </div>
+  </main>
 );
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

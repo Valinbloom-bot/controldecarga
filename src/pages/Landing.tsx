@@ -1,9 +1,11 @@
 import { Link, Navigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Truck, Fuel, Receipt, BarChart3, Check, Sparkles } from "lucide-react";
 import { getPostLoginPath } from "@/lib/vip-access";
+
 
 const FEATURES = [
   { icon: Truck, title: "Cargas sin límite", desc: "Registra cada viaje con millas, pago bruto y notas." },
@@ -24,6 +26,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Control de Cargas — Gestión para cargo vans y hotshot</title>
+        <meta name="description" content="App de gestión para conductores de cargo vans y operadores hotshot. Registra cargas, gasolina, peajes y gastos. Ganancia real por milla, semana y mes." />
+        <link rel="canonical" href="https://controldecargas.com/" />
+        <meta property="og:title" content="Control de Cargas — Gestión para cargo vans y hotshot" />
+        <meta property="og:description" content="Registra cargas, gasolina, peajes y gastos. Conoce tu ganancia real por milla, semana y mes." />
+        <meta property="og:url" content="https://controldecargas.com/" />
+      </Helmet>
       <header className="px-4 py-4 flex items-center justify-between max-w-5xl mx-auto">
         <div className="flex items-center gap-2">
           <Truck className="w-6 h-6 text-primary" />
@@ -34,6 +44,9 @@ export default function Landing() {
           <Link to="/auth"><Button size="sm">Empezar</Button></Link>
         </div>
       </header>
+
+      <main>
+
 
       <section className="px-4 pt-8 pb-12 text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
@@ -99,6 +112,8 @@ La app de gestión para conductores de cargo vans y operadores hotshot
           Después de la prueba se cobra automáticamente. Puedes cancelar en cualquier momento desde tu cuenta.
         </p>
       </section>
+      </main>
+
 
       <footer className="border-t mt-12 px-4 py-6">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">

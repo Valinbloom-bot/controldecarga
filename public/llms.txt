@@ -1,0 +1,13 @@
+# Control de Cargas
+
+> App de gestión para conductores de cargo vans y operadores hotshot. Registra cargas, gasolina, peajes y gastos del vehículo, y conoce tu ganancia real por milla, semana y mes.
+
+Control de Cargas es un SaaS en español operado por VAL IN BLOOM. Está diseñado para owner-operators de cargo vans y hotshot (no semi trucks). Ofrece 7 días de prueba gratis sin tarjeta y luego planes de $4.99/mes o $39.99/año.
+
+## Pages
+
+- [Inicio](/): Resumen del producto, funcionalidades y prueba gratis.
+- [Precios](/precios): Plan Pro Mensual ($4.99/mes) y Pro Anual ($39.99/año).
+- [Términos y Condiciones](/terminos): Condiciones de uso del servicio.
+- [Aviso de Privacidad](/privacidad): Cómo se recopilan y usan los datos.
+- [Política de Reembolsos](/reembolsos): Garantía de devolución de 30 días.

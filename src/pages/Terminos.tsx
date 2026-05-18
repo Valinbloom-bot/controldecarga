@@ -2,7 +2,12 @@ import LegalLayout from "@/components/LegalLayout";
 
 export default function Terminos() {
   return (
-    <LegalLayout title="Términos y Condiciones">
+    <LegalLayout
+      title="Términos y Condiciones"
+      description="Términos y condiciones de uso de Control de Cargas, operado por VAL IN BLOOM."
+      canonicalPath="/terminos"
+    >
+
       <p>
         Estos Términos y Condiciones ("Términos") regulan el uso de la aplicación
         Control de Cargas ("Servicio"), operada por <strong>VAL IN BLOOM</strong> ("nosotros", "nuestro" o "el Vendedor"). Al usar el Servicio,

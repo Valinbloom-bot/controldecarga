@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
@@ -137,9 +139,18 @@ export default function Pricing() {
 
   return (
     <div className="pb-20">
+      <Helmet>
+        <title>Precios — Control de Cargas</title>
+        <meta name="description" content="Plan Pro Mensual a $4.99/mes o Pro Anual a $39.99/año. Cargas, gasolina, peajes y reportes sin límite para cargo vans y hotshot." />
+        <link rel="canonical" href="https://controldecargas.com/precios" />
+        <meta property="og:title" content="Precios — Control de Cargas" />
+        <meta property="og:description" content="Pro Mensual $4.99 o Pro Anual $39.99. Cargas, gasolina, peajes y reportes sin límite." />
+        <meta property="og:url" content="https://controldecargas.com/precios" />
+      </Helmet>
       <PaymentTestModeBanner />
       <PageHeader title="Plan Pro" />
       <div className="px-4 space-y-4">
+
         <div className="text-center pt-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-2">
             <Sparkles className="w-3.5 h-3.5" /> Elige tu plan
