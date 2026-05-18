@@ -26,6 +26,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Control de Cargas — Gestión para cargo vans y hotshot</title>
+        <meta name="description" content="App de gestión para conductores de cargo vans y operadores hotshot. Registra cargas, gasolina, peajes y gastos. Ganancia real por milla, semana y mes." />
+        <link rel="canonical" href="https://controldecargas.com/" />
+        <meta property="og:title" content="Control de Cargas — Gestión para cargo vans y hotshot" />
+        <meta property="og:description" content="Registra cargas, gasolina, peajes y gastos. Conoce tu ganancia real por milla, semana y mes." />
+        <meta property="og:url" content="https://controldecargas.com/" />
+      </Helmet>
       <header className="px-4 py-4 flex items-center justify-between max-w-5xl mx-auto">
         <div className="flex items-center gap-2">
           <Truck className="w-6 h-6 text-primary" />
@@ -36,6 +44,9 @@ export default function Landing() {
           <Link to="/auth"><Button size="sm">Empezar</Button></Link>
         </div>
       </header>
+
+      <main>
+
 
       <section className="px-4 pt-8 pb-12 text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
