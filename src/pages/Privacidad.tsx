@@ -2,7 +2,12 @@ import LegalLayout from "@/components/LegalLayout";
 
 export default function Privacidad() {
   return (
-    <LegalLayout title="Aviso de Privacidad">
+    <LegalLayout
+      title="Aviso de Privacidad"
+      description="Cómo VAL IN BLOOM recopila, usa y protege tus datos personales en Control de Cargas."
+      canonicalPath="/privacidad"
+    >
+
       <p>
         Este Aviso de Privacidad describe cómo <strong>VAL IN BLOOM</strong> ("nosotros") recopila,
         utiliza y comparte tu información personal cuando usas la aplicación Control de Cargas
