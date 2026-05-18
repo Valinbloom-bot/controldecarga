@@ -1,9 +1,11 @@
 import { Link, Navigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Truck, Fuel, Receipt, BarChart3, Check, Sparkles } from "lucide-react";
 import { getPostLoginPath } from "@/lib/vip-access";
+
 
 const FEATURES = [
   { icon: Truck, title: "Cargas sin límite", desc: "Registra cada viaje con millas, pago bruto y notas." },
