@@ -66,6 +66,7 @@ function rowToCarga(r: any): Carga {
   const costoGasolina = Number(r.costo_gasolina) || 0;
   const hr = splitHora(r.hora_recogida);
   const he = splitHora(r.hora_entrega);
+  const paradasRaw = Array.isArray(r.paradas) ? r.paradas : null;
   return {
     id: r.id,
     fechaRecogida: r.fecha_recogida ?? "",
@@ -89,6 +90,7 @@ function rowToCarga(r: any): Carga {
     gananciaPorMilla: 0,
     ingresoPorMilla: 0,
     notas: r.notas ?? "",
+    paradas: paradasRaw ?? undefined,
     createdAt: r.created_at,
   };
 }
