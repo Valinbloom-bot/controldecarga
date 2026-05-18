@@ -30,6 +30,7 @@ export type Database = {
           notas: string | null
           otros_gastos: number
           pago_recibido: number
+          paradas: Json | null
           ubicacion_entrega: string | null
           ubicacion_recogida: string | null
           updated_at: string
@@ -50,6 +51,7 @@ export type Database = {
           notas?: string | null
           otros_gastos?: number
           pago_recibido?: number
+          paradas?: Json | null
           ubicacion_entrega?: string | null
           ubicacion_recogida?: string | null
           updated_at?: string
@@ -70,6 +72,7 @@ export type Database = {
           notas?: string | null
           otros_gastos?: number
           pago_recibido?: number
+          paradas?: Json | null
           ubicacion_entrega?: string | null
           ubicacion_recogida?: string | null
           updated_at?: string

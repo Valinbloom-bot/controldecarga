@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAppData } from "@/context/AppContext";
-import { Carga } from "@/types";
+import { Carga, Parada } from "@/types";
 import { formatMoney, formatNumber } from "@/lib/calculations";
 import PageHeader from "@/components/PageHeader";
 import ExportMenu from "@/components/ExportMenu";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Fuel, Moon } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Fuel, Moon, ArrowUp, ArrowDown, MapPin, PackageCheck } from "lucide-react";
 
 const TIMEZONES = [
   { value: "ET", label: "ET - Eastern" },
@@ -40,15 +40,7 @@ import { useNavigate } from "react-router-dom";
 import { useUsageGate } from "@/hooks/useUsageGate";
 import UsageBanner from "@/components/UsageBanner";
 
-const emptyForm = {
-  fechaRecogida: format(new Date(), "yyyy-MM-dd"),
-  horaRecogida: `${format(new Date(), "HH:mm")} ET`,
-  horaSalidaRecogida: "",
-  ubicacionRecogida: "",
-  fechaEntrega: format(new Date(), "yyyy-MM-dd"),
-  horaEntrega: "",
-  horaSalidaEntrega: "",
-  ubicacionEntrega: "",
+const emptyExtras = {
   millasVacias: 0,
   millasCargadas: 0,
   pagoRecibido: 0,
@@ -58,13 +50,54 @@ const emptyForm = {
   notas: "",
 };
 
+function newParada(tipo: "recogida" | "entrega"): Parada {
+  return {
+    tipo,
+    fecha: format(new Date(), "yyyy-MM-dd"),
+    hora: tipo === "recogida" ? `${format(new Date(), "HH:mm")} ET` : "",
+    horaSalida: "",
+    ubicacion: "",
+    notas: "",
+  };
+}
+
+// Build the editable parada arrays from a Carga (uses paradas if present, else flat fields)
+function paradasFromCarga(c: Carga): { recogidas: Parada[]; entregas: Parada[] } {
+  if (c.paradas && c.paradas.length > 0) {
+    return {
+      recogidas: c.paradas.filter(p => p.tipo === "recogida"),
+      entregas: c.paradas.filter(p => p.tipo === "entrega"),
+    };
+  }
+  return {
+    recogidas: [{
+      tipo: "recogida",
+      fecha: c.fechaRecogida,
+      hora: c.horaRecogida,
+      horaSalida: c.horaSalidaRecogida ?? "",
+      ubicacion: c.ubicacionRecogida,
+      notas: "",
+    }],
+    entregas: [{
+      tipo: "entrega",
+      fecha: c.fechaEntrega,
+      hora: c.horaEntrega,
+      horaSalida: c.horaSalidaEntrega ?? "",
+      ubicacion: c.ubicacionEntrega,
+      notas: "",
+    }],
+  };
+}
+
 export default function RegistroCarga() {
   const { data, addCarga, updateCarga, deleteCarga, addPeaje } = useAppData();
   const navigate = useNavigate();
   const { blocked } = useUsageGate("cargas");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Carga | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [recogidas, setRecogidas] = useState<Parada[]>([newParada("recogida")]);
+  const [entregas, setEntregas] = useState<Parada[]>([newParada("entrega")]);
+  const [form, setForm] = useState(emptyExtras);
   const [overnight, setOvernight] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [extrasOpen, setExtrasOpen] = useState(false);
@@ -78,15 +111,10 @@ export default function RegistroCarga() {
     }
     if (carga) {
       setEditing(carga);
+      const { recogidas: r, entregas: e } = paradasFromCarga(carga);
+      setRecogidas(r.length > 0 ? r : [newParada("recogida")]);
+      setEntregas(e.length > 0 ? e : [newParada("entrega")]);
       setForm({
-        fechaRecogida: carga.fechaRecogida,
-        horaRecogida: carga.horaRecogida,
-        horaSalidaRecogida: carga.horaSalidaRecogida ?? "",
-        ubicacionRecogida: carga.ubicacionRecogida,
-        fechaEntrega: carga.fechaEntrega,
-        horaEntrega: carga.horaEntrega,
-        horaSalidaEntrega: carga.horaSalidaEntrega ?? "",
-        ubicacionEntrega: carga.ubicacionEntrega,
         millasVacias: carga.millasVacias || 0,
         millasCargadas: carga.millasCargadas || 0,
         pagoRecibido: carga.pagoRecibido,
@@ -99,7 +127,9 @@ export default function RegistroCarga() {
       setExtrasOpen(carga.costoGasolina > 0);
     } else {
       setEditing(null);
-      setForm(emptyForm);
+      setRecogidas([newParada("recogida")]);
+      setEntregas([newParada("entrega")]);
+      setForm(emptyExtras);
       setOvernight(false);
       setExtrasOpen(false);
     }
@@ -108,18 +138,39 @@ export default function RegistroCarga() {
 
   const millasTotalCalc = (form.millasVacias || 0) + (form.millasCargadas || 0);
 
+  const updateParada = (tipo: "recogida" | "entrega", idx: number, patch: Partial<Parada>) => {
+    const setter = tipo === "recogida" ? setRecogidas : setEntregas;
+    setter(list => list.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+  };
+  const addStop = (tipo: "recogida" | "entrega") => {
+    const setter = tipo === "recogida" ? setRecogidas : setEntregas;
+    setter(list => [...list, newParada(tipo)]);
+  };
+  const removeStop = (tipo: "recogida" | "entrega", idx: number) => {
+    const setter = tipo === "recogida" ? setRecogidas : setEntregas;
+    setter(list => (list.length <= 1 ? list : list.filter((_, i) => i !== idx)));
+  };
+  const moveStop = (tipo: "recogida" | "entrega", idx: number, dir: -1 | 1) => {
+    const setter = tipo === "recogida" ? setRecogidas : setEntregas;
+    setter(list => {
+      const j = idx + dir;
+      if (j < 0 || j >= list.length) return list;
+      const copy = [...list];
+      [copy[idx], copy[j]] = [copy[j], copy[idx]];
+      return copy;
+    });
+  };
+
   const handleSave = async () => {
     if (saving) return;
-    if (!form.ubicacionRecogida.trim() || !form.ubicacionEntrega.trim()) {
-      toast.error("Completa recogida y entrega");
+    const invalidRec = recogidas.some(p => !p.ubicacion.trim() || !p.fecha || !p.hora);
+    const invalidEnt = entregas.some(p => !p.ubicacion.trim() || !p.fecha || !p.hora);
+    if (invalidRec) {
+      toast.error("Completa ubicación, fecha y hora de cada recogida");
       return;
     }
-    if (!form.fechaRecogida || !form.horaRecogida) {
-      toast.error("Ingresa fecha y hora de recogida");
-      return;
-    }
-    if (!form.fechaEntrega || !form.horaEntrega) {
-      toast.error("Ingresa fecha y hora de entrega");
+    if (invalidEnt) {
+      toast.error("Completa ubicación, fecha y hora de cada entrega");
       return;
     }
     if (millasTotalCalc <= 0) {
@@ -131,16 +182,20 @@ export default function RegistroCarga() {
       return;
     }
 
+    const primeraRecogida = recogidas[0];
+    const ultimaEntrega = entregas[entregas.length - 1];
+    const paradas: Parada[] = [...recogidas, ...entregas];
+
     const today = format(new Date(), "yyyy-MM-dd");
     const payload = {
-      fechaRecogida: form.fechaRecogida,
-      horaRecogida: form.horaRecogida,
-      horaSalidaRecogida: form.horaSalidaRecogida,
-      ubicacionRecogida: form.ubicacionRecogida,
-      fechaEntrega: form.fechaEntrega,
-      horaEntrega: form.horaEntrega,
-      horaSalidaEntrega: form.horaSalidaEntrega,
-      ubicacionEntrega: form.ubicacionEntrega,
+      fechaRecogida: primeraRecogida.fecha,
+      horaRecogida: primeraRecogida.hora,
+      horaSalidaRecogida: primeraRecogida.horaSalida ?? "",
+      ubicacionRecogida: primeraRecogida.ubicacion,
+      fechaEntrega: ultimaEntrega.fecha,
+      horaEntrega: ultimaEntrega.hora,
+      horaSalidaEntrega: ultimaEntrega.horaSalida ?? "",
+      ubicacionEntrega: ultimaEntrega.ubicacion,
       millasVacias: form.millasVacias || 0,
       millasCargadas: form.millasCargadas || 0,
       pagoRecibido: form.pagoRecibido,
@@ -149,6 +204,7 @@ export default function RegistroCarga() {
       hospedaje: overnight ? form.hospedaje : 0,
       otrosGastos: 0,
       notas: form.notas,
+      paradas,
     };
 
     setSaving(true);
@@ -160,7 +216,7 @@ export default function RegistroCarga() {
       if (ok && form.peajes > 0) {
         await addPeaje({
           fecha: today,
-          ubicacionCarretera: `${form.ubicacionRecogida} → ${form.ubicacionEntrega}`,
+          ubicacionCarretera: `${primeraRecogida.ubicacion} → ${ultimaEntrega.ubicacion}`,
           monto: form.peajes,
           metodoPago: "",
           notas: "Auto-registrado desde carga",
@@ -191,11 +247,13 @@ export default function RegistroCarga() {
   const gananciaNeta = (form.pagoRecibido || 0) - totalGastos;
   const gananciaPorMilla = millasTotalCalc > 0 ? gananciaNeta / millasTotalCalc : 0;
 
-  // Trip duration in hours
+  // Trip duration in hours (first pickup → last delivery)
   const duracionHoras = (() => {
-    if (!form.fechaRecogida || !form.horaRecogida || !form.fechaEntrega || !form.horaEntrega) return 0;
-    const start = new Date(`${form.fechaRecogida}T${parseTime(form.horaRecogida).time}`);
-    const end = new Date(`${form.fechaEntrega}T${parseTime(form.horaEntrega).time}`);
+    const pr = recogidas[0];
+    const en = entregas[entregas.length - 1];
+    if (!pr || !en || !pr.fecha || !pr.hora || !en.fecha || !en.hora) return 0;
+    const start = new Date(`${pr.fecha}T${parseTime(pr.hora).time}`);
+    const end = new Date(`${en.fecha}T${parseTime(en.hora).time}`);
     const diff = (end.getTime() - start.getTime()) / 3600000;
     return diff > 0 ? diff : 0;
   })();
@@ -208,6 +266,87 @@ export default function RegistroCarga() {
   const gananciaPorHora = duracionHoras > 0 ? gananciaNeta / duracionHoras : 0;
 
   const sorted = [...data.cargas].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  const renderParadaCard = (
+    tipo: "recogida" | "entrega",
+    p: Parada,
+    idx: number,
+    total: number
+  ) => {
+    const label = tipo === "recogida" ? "Recogida" : "Entrega";
+    const list = tipo === "recogida" ? recogidas : entregas;
+    return (
+      <div key={`${tipo}-${idx}`} className="border border-border rounded-lg p-3 space-y-2 bg-card/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-sm font-semibold">
+            {tipo === "recogida" ? <MapPin className="w-4 h-4 text-primary" /> : <PackageCheck className="w-4 h-4 text-success" />}
+            <span>{label} {idx + 1}{total > 1 ? ` de ${total}` : ""}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" disabled={idx === 0} onClick={() => moveStop(tipo, idx, -1)} aria-label="Subir">
+              <ArrowUp className="w-3.5 h-3.5" />
+            </Button>
+            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" disabled={idx === list.length - 1} onClick={() => moveStop(tipo, idx, 1)} aria-label="Bajar">
+              <ArrowDown className="w-3.5 h-3.5" />
+            </Button>
+            <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive" disabled={list.length <= 1} onClick={() => removeStop(tipo, idx)} aria-label="Eliminar">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+        <Input
+          className="h-12 text-base"
+          value={p.ubicacion}
+          onChange={e => updateParada(tipo, idx, { ubicacion: e.target.value })}
+          placeholder="Ciudad, Estado"
+        />
+        <Input
+          className="h-12 text-base"
+          type="date"
+          value={p.fecha}
+          onChange={e => updateParada(tipo, idx, { fecha: e.target.value })}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Check-in</Label>
+            <div className="flex gap-1">
+              <Input
+                className="h-12 text-base flex-1 min-w-0"
+                type="time"
+                value={parseTime(p.hora).time}
+                onChange={e => updateParada(tipo, idx, { hora: buildTime(e.target.value, parseTime(p.hora).tz) })}
+              />
+              <Select value={parseTime(p.hora).tz} onValueChange={(v) => updateParada(tipo, idx, { hora: buildTime(parseTime(p.hora).time, v) })}>
+                <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Check-out</Label>
+            <div className="flex gap-1">
+              <Input
+                className="h-12 text-base flex-1 min-w-0"
+                type="time"
+                value={parseTime(p.horaSalida).time}
+                onChange={e => updateParada(tipo, idx, { horaSalida: buildTime(e.target.value, parseTime(p.horaSalida).tz) })}
+              />
+              <Select value={parseTime(p.horaSalida).tz} onValueChange={(v) => updateParada(tipo, idx, { horaSalida: buildTime(parseTime(p.horaSalida).time, v) })}>
+                <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        <Textarea
+          value={p.notas ?? ""}
+          onChange={e => updateParada(tipo, idx, { notas: e.target.value })}
+          placeholder="Notas de esta parada (opcional)"
+          rows={2}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="pb-20">
@@ -233,106 +372,26 @@ export default function RegistroCarga() {
                 <DialogTitle>{editing ? "Editar Carga" : "Nueva Carga"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                {/* Required fields - big and tappable */}
-                <div className="space-y-1.5">
-                  <Label className="text-base">Recogida *</Label>
-                  <Input
-                    className="h-12 text-base"
-                    value={form.ubicacionRecogida}
-                    onChange={e => setField("ubicacionRecogida", e.target.value)}
-                    placeholder="Ciudad, Estado"
-                    autoFocus
-                  />
-                  <div className="pt-1">
-                    <Input
-                      className="h-12 text-base"
-                      type="date"
-                      value={form.fechaRecogida}
-                      onChange={e => setField("fechaRecogida", e.target.value)}
-                    />
+                {/* Pickups */}
+                <div className="space-y-2">
+                  <Label className="text-base">Recogidas *</Label>
+                  <div className="space-y-2">
+                    {recogidas.map((p, i) => renderParadaCard("recogida", p, i, recogidas.length))}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Check-in</Label>
-                      <div className="flex gap-1">
-                        <Input
-                          className="h-12 text-base flex-1 min-w-0"
-                          type="time"
-                          value={parseTime(form.horaRecogida).time}
-                          onChange={e => setField("horaRecogida", buildTime(e.target.value, parseTime(form.horaRecogida).tz))}
-                        />
-                        <Select value={parseTime(form.horaRecogida).tz} onValueChange={(v) => setField("horaRecogida", buildTime(parseTime(form.horaRecogida).time, v))}>
-                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
-                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Check-out</Label>
-                      <div className="flex gap-1">
-                        <Input
-                          className="h-12 text-base flex-1 min-w-0"
-                          type="time"
-                          value={parseTime(form.horaSalidaRecogida).time}
-                          onChange={e => setField("horaSalidaRecogida", buildTime(e.target.value, parseTime(form.horaSalidaRecogida).tz))}
-                        />
-                        <Select value={parseTime(form.horaSalidaRecogida).tz} onValueChange={(v) => setField("horaSalidaRecogida", buildTime(parseTime(form.horaSalidaRecogida).time, v))}>
-                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
-                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
+                  <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => addStop("recogida")}>
+                    <Plus className="w-4 h-4 mr-1" /> Agregar recogida
+                  </Button>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-base">Entrega *</Label>
-                  <Input
-                    className="h-12 text-base"
-                    value={form.ubicacionEntrega}
-                    onChange={e => setField("ubicacionEntrega", e.target.value)}
-                    placeholder="Ciudad, Estado"
-                  />
-                  <div className="pt-1">
-                    <Input
-                      className="h-12 text-base"
-                      type="date"
-                      value={form.fechaEntrega}
-                      onChange={e => setField("fechaEntrega", e.target.value)}
-                    />
+                {/* Deliveries */}
+                <div className="space-y-2">
+                  <Label className="text-base">Entregas *</Label>
+                  <div className="space-y-2">
+                    {entregas.map((p, i) => renderParadaCard("entrega", p, i, entregas.length))}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Check-in</Label>
-                      <div className="flex gap-1">
-                        <Input
-                          className="h-12 text-base flex-1 min-w-0"
-                          type="time"
-                          value={parseTime(form.horaEntrega).time}
-                          onChange={e => setField("horaEntrega", buildTime(e.target.value, parseTime(form.horaEntrega).tz))}
-                        />
-                        <Select value={parseTime(form.horaEntrega).tz} onValueChange={(v) => setField("horaEntrega", buildTime(parseTime(form.horaEntrega).time, v))}>
-                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
-                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Check-out</Label>
-                      <div className="flex gap-1">
-                        <Input
-                          className="h-12 text-base flex-1 min-w-0"
-                          type="time"
-                          value={parseTime(form.horaSalidaEntrega).time}
-                          onChange={e => setField("horaSalidaEntrega", buildTime(e.target.value, parseTime(form.horaSalidaEntrega).tz))}
-                        />
-                        <Select value={parseTime(form.horaSalidaEntrega).tz} onValueChange={(v) => setField("horaSalidaEntrega", buildTime(parseTime(form.horaSalidaEntrega).time, v))}>
-                          <SelectTrigger className="h-12 w-[72px] px-2 text-sm"><SelectValue /></SelectTrigger>
-                          <SelectContent>{TIMEZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
+                  <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => addStop("entrega")}>
+                    <Plus className="w-4 h-4 mr-1" /> Agregar entrega
+                  </Button>
                 </div>
 
                 {/* Mileage - three fields with auto-total */}
@@ -496,17 +555,22 @@ export default function RegistroCarga() {
           {sorted.map(c => {
             const linkedGas = getLinkedGas(c.id);
             const linkedTotal = linkedGas.reduce((s, g) => s + g.totalGasolina, 0);
+            const totalParadas = c.paradas?.length ?? 0;
+            const hasMultiStop = totalParadas > 2;
             return (
               <div key={c.id} className="bg-card border border-border rounded-lg overflow-hidden">
                 <button
                   className="w-full p-3 flex items-center justify-between text-left"
                   onClick={() => setExpanded(expanded === c.id ? null : c.id)}
                 >
-                  <div>
-                    <div className="text-sm font-semibold">{c.ubicacionRecogida} → {c.ubicacionEntrega}</div>
-                    <div className="text-xs text-muted-foreground">{c.fechaRecogida}</div>
+                  <div className="min-w-0 pr-2">
+                    <div className="text-sm font-semibold truncate">{c.ubicacionRecogida} → {c.ubicacionEntrega}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {c.fechaRecogida}
+                      {hasMultiStop && <span className="ml-1">· {totalParadas} paradas</span>}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className={`text-sm font-bold ${c.gananciaNeta >= 0 ? "text-success" : "text-destructive"}`}>
                       {formatMoney(c.gananciaNeta)}
                     </span>
@@ -515,6 +579,39 @@ export default function RegistroCarga() {
                 </button>
                 {expanded === c.id && (
                   <div className="px-3 pb-3 border-t border-border pt-2 text-sm space-y-2 animate-slide-up">
+                    {hasMultiStop && c.paradas && (
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ruta</div>
+                        <ol className="space-y-1.5">
+                          {c.paradas.map((p, i) => {
+                            const isRec = p.tipo === "recogida";
+                            const sameTypeIdx = c.paradas!.slice(0, i + 1).filter(x => x.tipo === p.tipo).length;
+                            return (
+                              <li key={i} className="flex gap-2">
+                                <div className="flex flex-col items-center">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isRec ? "bg-primary/15 text-primary" : "bg-success/15 text-success"}`}>
+                                    {i + 1}
+                                  </div>
+                                  {i < c.paradas!.length - 1 && <div className="w-px flex-1 bg-border my-1" />}
+                                </div>
+                                <div className="flex-1 pb-1">
+                                  <div className="text-xs font-semibold">
+                                    {isRec ? `Recogida ${sameTypeIdx}` : `Entrega ${sameTypeIdx}`}
+                                  </div>
+                                  <div className="text-sm">{p.ubicacion}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {p.fecha}{p.hora ? ` · ${p.hora}` : ""}
+                                    {p.horaSalida ? ` → ${p.horaSalida}` : ""}
+                                  </div>
+                                  {p.notas && <div className="text-xs text-muted-foreground italic mt-0.5">{p.notas}</div>}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-1">
                       <span className="text-muted-foreground">Pago:</span><span className="font-medium">{formatMoney(c.pagoRecibido)}</span>
                       <span className="text-muted-foreground">Millas:</span><span>{formatNumber(c.millasTotal, 0)}</span>
