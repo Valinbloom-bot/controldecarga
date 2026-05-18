@@ -1,56 +1,82 @@
-# Trial de 7 días sin tarjeta + recordatorios + bloqueo automático
+## Múltiples paradas por carga
 
-## 1. Trial sin tarjeta (acceso por tiempo)
+Permitir que una carga tenga varias recogidas y varias entregas en secuencia, manteniendo intacto el resto del modelo.
 
-Hoy el trial vive en Stripe y exige tarjeta. Cambiamos a un trial nativo basado en la fecha de registro.
+### Modelo de datos
 
-- El trial empieza con el signup. Usamos `auth.users.created_at` como `trial_started_at` (sin nueva tabla; ya existe).
-- Definimos `trial_ends_at = created_at + 7 days`.
-- Nuevo hook `useTrialStatus` que devuelve `{ trialActive, trialDaysLeft, trialEndsAt }`.
-- En `useAccessStatus`:
-  - `hasFullAccess = isAdmin || hasComp || isActive (subscription) || trialActive`.
-  - Nuevo `accessMode: "trial"`.
-- `ProtectedRoute` sigue redirigiendo a `/precios` cuando no hay acceso → al expirar el día 7 cae automáticamente al paywall.
-- `TrialBadge` deja de depender de Stripe `trialing` y muestra los días restantes del trial nativo.
-
-## 2. Página de precios y checkout (sin trial en Stripe)
-
-- `/precios` muestra solo los dos planes: **Pro Mensual $4.99/mes** y **Pro Anual $39.99/año**.
-- Copy actualizado: durante los primeros 7 días no se pide tarjeta; al expirar, hay que elegir plan.
-- Edge function `create-checkout-session`: quitar `trial_period_days` para que el cobro sea inmediato (el trial ya se consumió antes).
-- Botón pasa de "Empezar prueba de 7 días" a "Suscribirme" / "Elegir plan".
-
-## 3. Recordatorios por email (día 4 y día 5)
-
-Requiere infraestructura de emails de Lovable Cloud. Pasos:
-
-- Si aún no hay dominio configurado, pedirte que lo configures (botón de setup).
-- Una vez listo, montamos infra de emails y una edge function programada `trial-reminder-cron` que cada día:
-  - Busca usuarios cuyo `created_at` corresponda al día 4 (3 días restantes) o día 5 (2 días restantes) del trial.
-  - Excluye admins, comp access y usuarios con suscripción activa.
-  - Encola email transaccional (plantilla `trial-reminder`) con CTA a `/precios`.
-- Idempotencia: tabla `trial_reminders_sent (user_id, day)` para no duplicar envíos.
-- Cron de Postgres: ejecución diaria (ej. 14:00 UTC).
-
-## 4. Bloqueo automático día 7
-
-- No requiere job extra: al pasar `trial_ends_at`, `useTrialStatus` devuelve `trialActive=false` y `ProtectedRoute` redirige a `/precios`.
-- El frontend re-evalúa el trial en cada carga, así no hace falta sesión activa para echar al usuario.
-
-## Cambios técnicos puntuales
+Agregar una columna `paradas` (JSONB) a la tabla `cargas`, opcional, con un arreglo ordenado:
 
 ```text
-src/hooks/useTrialStatus.ts        (NUEVO)
-src/hooks/useAccessStatus.ts       (incluir trial)
-src/hooks/useSubscription.ts       (sin cambios funcionales)
-src/components/TrialBadge.tsx      (usar useTrialStatus)
-src/pages/Pricing.tsx              (copy + sin "prueba 7 días" en botón)
-supabase/functions/create-checkout-session/index.ts  (quitar trial)
-supabase/functions/trial-reminder-cron/index.ts      (NUEVO)
-migración: tabla trial_reminders_sent + cron job diario
+paradas: [
+  { tipo: "recogida" | "entrega",
+    fecha, hora, horaSalida, ubicacion, notas }
+]
 ```
 
-## Lo que necesito de tu lado
+- El orden del arreglo = la secuencia de paradas que verá el conductor.
+- Los campos actuales (`ubicacion_recogida`, `fecha_recogida`, `hora_recogida`, `ubicacion_entrega`, `fecha_entrega`, `hora_entrega`, etc.) se conservan y se sincronizan con la **primera recogida** y la **última entrega**, para no romper:
+  - listas existentes
+  - cálculos (millas, ganancias, gasolina vinculada)
+  - exportaciones CSV/PDF
+  - cargas antiguas sin `paradas`
 
-1. Confirmar el plan.
-2. Para los emails: si todavía no tienes dominio de email configurado en Lovable Cloud, te pediré configurarlo (paso de un clic). Sin dominio, el bloqueo y los planes funcionan, pero los recordatorios no se envían.
+Sin migración de datos antigua: cargas previas seguirán mostrándose tal cual (una recogida + una entrega).
+
+### Tipos (`src/types/index.ts`)
+
+Agregar:
+
+```ts
+export interface Parada {
+  tipo: "recogida" | "entrega";
+  fecha: string;
+  hora: string;
+  horaSalida?: string;
+  ubicacion: string;
+  notas?: string;
+}
+```
+
+Agregar `paradas?: Parada[]` a `Carga`.
+
+### Mapper (`AppContext.tsx`)
+
+- `rowToCarga`: leer `r.paradas` si existe.
+- `cargaToRow`: incluir `paradas: c.paradas ?? null` y sincronizar la primera recogida / última entrega en los campos existentes antes de guardar.
+
+### Formulario (`src/pages/RegistroCarga.tsx`)
+
+Reemplazar las dos secciones fijas "Recogida" y "Entrega" por:
+
+- **Recogidas** (lista, mínimo 1)
+  - Cada item: ubicación, fecha, check-in (+ TZ), check-out (+ TZ), notas
+  - Botón "Agregar recogida" abajo
+  - Botón eliminar por parada (deshabilitado si solo queda 1)
+- **Entregas** (lista, mínimo 1) — misma estructura
+- Header de cada parada: `Recogida 1`, `Recogida 2`, `Entrega 1`… para indicar secuencia
+- Botones ↑ ↓ para reordenar dentro del mismo tipo
+
+El resto del formulario (millas, pago, pernocta, extras opcionales, etc.) no cambia. Validación: al menos 1 recogida y 1 entrega completas (ubicación + fecha + hora check-in).
+
+Al guardar:
+- `paradas` = recogidas seguidas de entregas, en el orden de la UI
+- `ubicacionRecogida/fechaRecogida/horaRecogida/horaSalidaRecogida` ← primera recogida
+- `ubicacionEntrega/fechaEntrega/horaEntrega/horaSalidaEntrega` ← última entrega
+
+Al abrir en modo edición: si la carga tiene `paradas`, se hidratan; si no, se construye una recogida y una entrega desde los campos planos existentes.
+
+### Vista de lista (item expandido en `RegistroCarga.tsx`)
+
+Si la carga tiene `paradas` con más de 2, mostrar bloque "Ruta" con la secuencia numerada (Recogida 1 → Recogida 2 → Entrega 1 → Entrega 2), cada una con su ubicación, fecha y hora. Cargas sin `paradas` o con exactamente 1+1 mantienen la vista actual.
+
+### Fuera de alcance
+
+- Exportaciones CSV/PDF siguen mostrando solo origen y destino (primera recogida / última entrega). Se puede ampliar después si se pide.
+- Sin cambios en gasolina, peajes, metas, dashboard.
+
+### Archivos a tocar
+
+- `supabase/migrations/...` — `ALTER TABLE cargas ADD COLUMN paradas jsonb`
+- `src/types/index.ts`
+- `src/context/AppContext.tsx` (mappers)
+- `src/pages/RegistroCarga.tsx` (formulario + vista lista)
