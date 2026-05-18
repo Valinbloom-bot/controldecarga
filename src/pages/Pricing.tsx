@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
